@@ -1,0 +1,46 @@
+{
+  "name": "major_project",
+  "version": "0.0.0",
+  "description": "A site for learning machine learning.",
+  "main": "dist/app.js",
+  "scripts": {
+    "start": "node dist/app.js",
+    "prebuild": "echo prebuild",
+    "build": "tsc -b",
+    "start:dev": "concurrently \"tsc -w\" \"nodemon dist\\app.js\"",
+    "pretest": "eslint --ignore-path .gitignore --ext ts,tsx,js,jsx src/*",
+    "test": "mocha -r ts-node/register tests/**/*.test.ts",
+    "coverage": "nyc -r lcov -e .ts -x \"*.test.ts\" npm run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/paritosh9199/major_project.git"
+  },
+  "author": "Paritosh Srivastava",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/paritosh9199/major_project/issues"
+  },
+  "homepage": "https://github.com/paritosh9199/major_project#readme",
+  "devDependencies": {
+    "@types/chai": "^4.2.10",
+    "@types/mocha": "^7.0.2",
+    "@types/node": "^13.9.0",
+    "@typescript-eslint/eslint-plugin": "^2.22.0",
+    "@typescript-eslint/parser": "^2.22.0",
+    "assert": "^2.0.0",
+    "chai": "^4.2.0",
+    "concurrently": "^5.1.0",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-plugin-import": "^2.20.1",
+    "eslint-plugin-node": "^11.0.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1",
+    "mocha": "^7.1.0",
+    "nodemon": "^2.0.2",
+    "nyc": "^15.0.0",
+    "ts-node": "^8.6.2",
+    "typescript": "^3.8.3"
+  }
+}
