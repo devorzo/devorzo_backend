@@ -4,10 +4,12 @@
   "description": "A site for learning machine learning.",
   "main": "dist/app.js",
   "scripts": {
-    "start": "node dist/app.js --service='oink,poink' --env=production",
+    "start": "node dist/app.js --service=all --env=production",
     "prebuild": "echo prebuild",
     "build": "tsc -b",
     "start:dev": "concurrently \"tsc -w\" \"nodemon dist\\app.js --service=all --env=development\"",
+    "start:api": "nodemon dist\\app.js --service=all --env=development",
+    "compile": "tsc -w",
     "pretest": "eslint --ignore-path .gitignore --ext ts,tsx,js,jsx src/*",
     "test": "mocha -r ts-node/register tests/**/*.test.ts",
     "coverage": "nyc -r lcov -e .ts -x \"*.test.ts\" npm run test"

@@ -11,15 +11,20 @@ import {v4 as uuid } from "uuid"
 import Services from "./services/initService"
 import APIService from "./services/micros/api_service"
 import authService from "./services/micros/auth_service"
-import logger from "./lib/logger"
+import logger, { Level } from "./lib/logger"
 import getServiceNames from "./lib/gather_service_names"
 
 
 let argv = minimist(process.argv.slice(2))
-logger({ argv })
+initEnv(argv.env)
 
-const env = initEnv(argv.env)
-// logger({ process: process.env, env })
+
+// logger({ argv }, Level.WARN)
+// logger({ argv }, Level.ERROR)
+// logger({ argv }, Level.VERBOSE)
+logger({ argv }, Level.VERBOSE)
+// logger({ argv }, Level.INFO)
+
 
 
 let app = express()
@@ -56,10 +61,9 @@ app.use(session({
 let s = new Services(app)
 s.addService("api-service", APIService)
 s.addService("auth-service", authService)
-// s.startService("auth-service")
-let serviceNames = argv.service ? getServiceNames(argv.service) : "all"
-logger(serviceNames)
+let serviceNames = getServiceNames(argv.service)
 s.serviceInit(serviceNames)
+logger({serviceNames}, Level.VERBOSE)
 
 
 app.set("port", (process.env.PORT || 5000))
@@ -70,7 +74,6 @@ app.get("*", (req, res) => {
 })
 
 app.listen(app.get("port"), process.env.IP!, function () {
-    logger(env)
-    logger(`Server started at ${app.get("port")}`)
+    logger(`Server started at ${app.get("port")}`,Level.INFO)
     logger(`env: ${process.env.NODE_ENV}`)
 })

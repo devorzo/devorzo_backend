@@ -91,7 +91,7 @@ UserSchema.methods.generateAuthToken = function () {
 UserSchema.statics.removeAuthToken = function (token: any) {
     let user = this
 
-    let decoded: any = jwt.decode(token, { complete: true });
+    let decoded: any = jwt.decode(token, { complete: true })
 
 
     if (decoded) {
