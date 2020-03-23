@@ -9,11 +9,15 @@ import express from "express"
 const apiService = (app: express.Application) => {
     const router = express.Router()
 
-    router.get("/", (req: express.Request, res: express.Response) => {
-        if (req.session)
-            req.session.yolo = "popo"
-        res.send("Hey!")
+    router.get("/api-service,", (req, res) => {
+        res.send({ status: 200, success:true })
     })
+
+    // router.get("/", (req: express.Request, res: express.Response) => {
+    //     if (req.session)
+    //         req.session.yolo = "popo"
+    //     res.send("Hey!")
+    // })
     // router.post('/register', registerController);
 
     // router.post('/login', loginController);

@@ -7,8 +7,8 @@ import { RequestInterface, ResponseInterface } from "../../interfaces/express"
 const authService = (app: express.Application) => {
     const router = express.Router()
 
-    router.get("/auth", (req: Request, res: Response) => {
-        res.send("Auth!")
+    router.get("/auth-service,", (req, res) => {
+        res.send({ status: 200, success:true })
     })
 
     router.post("/register", (req: Request, res: Response, next: NextFunction) => {
