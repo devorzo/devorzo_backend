@@ -1,7 +1,7 @@
 // eslint-disable-next-line no-unused-vars
 import express, { Request, Response, NextFunction } from "express"
 import { v4 } from "uuid"
-// import { RequestInterface, ResponseInterface } from "../../interfaces/express"
+// import { Request, Response } from "../../interfaces/express"
 
 
 import { GridFSBucket, ObjectID } from "mongodb"

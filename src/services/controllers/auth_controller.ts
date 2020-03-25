@@ -1,5 +1,6 @@
 import _ from "lodash"
 import User from "../../database/models/user"
+import Follower from "../../database/models/follower"
 
 // eslint-disable-next-line no-unused-vars
 import express, { Request, Response } from "express"
@@ -7,7 +8,7 @@ import logger, { Level } from "../../lib/logger"
 
 export const registerController = (req: Request, res: Response) => {
     // let body: any = _.pick(_.pick(req, ["body"]), ["email", "password", "confpassword"])
-    let body = _.pick(req.body, ["email", "password", "confpassword","session_persistance"])
+    let body = _.pick(req.body, ["email", "password", "confpassword", "session_persistance"])
     // let body = req.body
     logger(req.body, Level.VERBOSE)
     let user = new User(body)
@@ -23,14 +24,31 @@ export const registerController = (req: Request, res: Response) => {
                         req.session.uid = user._id
                         req.session.name = user.email
                     }
-                    // logger({user});
-                    res.setHeader("x-auth", token)
-                    res.send({ success: true, user: user.toJSON(), token })
+                    logger({ user })
+
+                    let follower = new Follower({
+                        user_uuid: user.user_uuid
+                    })
+
+                    follower.save().then(() => {
+                        res.setHeader("x-auth", token)
+                        res.send({ success: true, user: user.toJSON(), token })
+                    }).catch((e) => {
+                        res.setHeader("x-auth", token)
+                        res.send({ success: true, user: user.toJSON(), token, status:{
+                            success:false,
+                            error:{
+                                message: `Error creating follower schema Error: ${e}`
+                            }
+                        } })
+                    })
+
+
                     // res.redirect('/me');
                     // res.header('x-auth', token).redirect(200, '/me', user);
                 }).catch((e) => {
                     let msg = { "msg": e }
-                    res.status(400).send({ success: false, error: msg })
+                    res.status(400).send({ success: false, error: { message: msg } })
                 })
             } else {
                 let message = "Passwords do not match!"
@@ -45,7 +63,7 @@ export const registerController = (req: Request, res: Response) => {
 
 
 export const loginController = (req: Request, res: Response) => {
-    let body = _.pick(req.body, ["email", "password","session_persistance"])
+    let body = _.pick(req.body, ["email", "password", "session_persistance"])
 
     User.findByCredentials(body.email, body.password).then((user: any) => {
         return user.generateAuthToken().then((token: any) => {

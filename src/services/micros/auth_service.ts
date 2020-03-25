@@ -3,7 +3,7 @@ import express, { Request, Response, NextFunction } from "express"
 import { registerController, loginController, logoutController } from "../controllers/auth_controller"
 import auth_middleware, { Auth } from "../middleware/auth_middleware"
 // eslint-disable-next-line no-unused-vars
-import { RequestInterface, ResponseInterface } from "../../interfaces/express"
+// import { Request, Response } from "../../interfaces/express"
 const authService = (app: express.Application) => {
     const router = express.Router()
 
@@ -12,15 +12,15 @@ const authService = (app: express.Application) => {
     })
 
     router.post("/register", (req: Request, res: Response, next: NextFunction) => {
-        auth_middleware(req! as RequestInterface, res! as ResponseInterface, next, Auth.IS_LOGGED_IN)
+        auth_middleware(req! as Request, res! as Response, next, Auth.IS_LOGGED_OUT)
     }, registerController)
 
     router.post("/login", (req: Request, res: Response, next: NextFunction) => {
-        auth_middleware(req! as RequestInterface, res! as ResponseInterface, next, Auth.IS_LOGGED_IN)
+        auth_middleware(req! as Request, res! as Response, next, Auth.IS_LOGGED_OUT)
     }, loginController)
 
     router.post("/logout", (req: Request, res: Response, next: NextFunction) => {
-        auth_middleware(req! as RequestInterface, res! as ResponseInterface, next, Auth.IS_LOGGED_OUT)
+        auth_middleware(req! as Request, res! as Response, next, Auth.IS_LOGGED_IN)
     }, logoutController)
 
     app.use(router)

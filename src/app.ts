@@ -17,7 +17,9 @@ initEnv(argv.env)
 
 
 import Services from "./services/initService"
-import APIService from "./services/micros/api_service"
+import ApiService from "./services/micros/api_service"
+import userApiService from "./services/micros/user_api_service"
+import blogApiService from "./services/micros/blog_api_service"
 import authService from "./services/micros/auth_service"
 import fileService from "./services/micros/file_service"
 import uiService from "./services/micros/ui_service"
@@ -68,7 +70,9 @@ app.set("view engine", "ejs")
 
 /* Services */
 let s = new Services(app)
-s.addService("api-service", APIService)
+s.addService("api-service", ApiService)
+s.addService("blog-api-service", userApiService)
+s.addService("user-api-service", blogApiService)
 s.addService("auth-service", authService)
 s.addService("file-service", fileService)
 s.addService("ui-service", uiService)

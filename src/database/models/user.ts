@@ -5,31 +5,26 @@ import jwt from "jsonwebtoken"
 import _ from "lodash"
 import bcrypt from "bcryptjs"
 import { v4 as uuid } from "uuid"
+import { generateHexString } from "../../lib/hex_rand"
 
-export interface IUserDocument extends Document {
-    email: string;
-    fullname: string;
-    password: string;
-    tokens: {
-        access: string;
-        token: string;
-    }[];
+// eslint-disable-next-line no-unused-vars
+import { IUserDocument, IUser, IUserModel } from "../../interfaces/databaseInterfaces"
+import logger from "../../lib/logger"
+
+logger(generateHexString(128))
+
+enum Gender {
+    "MALE" = 0,
+    "FEMALE" = 1,
+    "OTHER" = 2,
+    "NOT_SPECIFIED" = -1
 }
 
-export interface IUser extends IUserDocument {
-    // methods here! 
-    toJSON(): { _id: Types.ObjectId, email: string }
-    generateAuthToken(): any
+enum AccountType {
+    "NORMIE" = 0,
+    "MODERATOR" = 1,
+    "ADMIN" = 2
 }
-
-export interface IUserModel extends Model<IUser> {
-    // statics here
-    removeAuthToken(token: any): any
-    findByCredentials(email: string, password: string): any
-    accountExists(email: string): any
-    findByToken(token: any): any
-}
-
 const UserSchema: Schema = new Schema({
     email: {
         type: String,
@@ -41,6 +36,80 @@ const UserSchema: Schema = new Schema({
             validator: validator.isEmail,
             message: "{VALUE} is not a valid email"
         }
+    },
+
+    details: {
+        fullname: {
+            type: String,
+            required: true,
+            default: `${generateHexString(128)}`,
+            trim: true,
+            minlength: 1,
+        },
+        username: {
+            type: String,
+            unique: true,
+            default: `${generateHexString(128)}`,
+            required: true,
+            trim: true,
+            minlength: 1,
+        },
+        profile_image_link: {
+            type: String,
+            default: `https://avatars.dicebear.com/v2/identicon/${uuid()}.svg`,
+            required: true,
+            trim: true,
+            minlength: 1,
+        },
+        user_bio: {
+            type: String,
+            // eslint-disable-next-line quotes
+            default: `Hey! I am a learner!`,
+            required: true,
+            trim: true,
+            minlength: 1,
+        },
+        account_type: {
+            type: Number,
+            default: AccountType.NORMIE,
+            required: true,
+            minlength: 1,
+            maxlength: 12
+        },
+        gender: {
+            type: Number,
+            default: Gender.NOT_SPECIFIED,
+            required: true,
+            minlength: 1,
+            maxlength: 12
+        },
+    },
+
+    user_uuid: {
+        type: String,
+        unique: true,
+        default: `user.${uuid()}`,
+        required: true,
+        trim: true,
+        minlength: 1,
+    },
+    account_created_on: {
+        type: Number,
+        default: Date.now(),
+        required: true,
+        minlength: 1,
+    },
+    account_initialised: {
+        type: Number,
+        default: 0,
+        required: true,
+        minlength: 1,
+    },
+    email_verified: {
+        type: Number,
+        default: 0,
+        required: true,
+        minlength: 1,
     },
     password: {
         type: String,
@@ -56,17 +125,31 @@ const UserSchema: Schema = new Schema({
             type: String,
             required: true
         }
+    }],
+    bookmarks: [{
+        article_uuid: {
+            type: String,
+            required: true
+        },
+        bookmarked_on: {
+            type: Number,
+            default: Date.now(),
+            required: true
+        }
+    }],
+    history: [{
+        article_uuid: {
+            type: String,
+            required: true
+        },
+        visited_on: {
+            type: Number,
+            default: Date.now(),
+            required: true
+        }
     }]
 })
 
-//================================
-
-// class UserClass {
-//     // objects...
-//        methods
-// }
-
-// UserSchema.loadClass(UserClass)
 UserSchema.methods.toJSON = function () {
     let user = this
     let userObject = user.toObject()
@@ -180,37 +263,3 @@ UserSchema.pre("save", function (next) {
 export const User: IUserModel = model<IUser, IUserModel>("User", UserSchema)
 
 export default User
-// let User = mongoose.model("User", UserSchema)
-
-// module.exports = { User }
-
-// class UserClass {
-//     // _id: 
-
-//     toJSON() {
-//         // let user = this
-//         // let userObject = user.toObject()
-//         return _.pick(this, ["_id", "email"])
-
-//     }
-
-//     generateAuthToken() {
-//         // let user = this
-//         let access = "auth"
-//         let token = jwt.sign({ _id: this._id.toHexString(), access }, process.env.JWT_SECRET!).toString()
-
-//         this.tokens.push({ access, token })
-
-//         return this.save().then(() => {
-//             return token
-//         })
-//     }
-
-//     static removeToken(token) {
-//         return this.update({
-//             $pull: {
-//                 tokens: { token }
-//             }
-//         })
-//     }
-// }
