@@ -2,68 +2,67 @@
 import express, { Request, Response } from "express"
 
 import userController from "../../services/controllers/user_api_controller"
-// import { Request, Response } from "../../interfaces/express"
 
-// import path from "path"
-// import _ from "lodash"
-
-// let reactController = require("../controllers/reactController")
 // let { registerController, loginController, logoutController } = require("../controllers/authUserController")
 // let { auth, auth_semi } = require("../middlewares/auth")
-
-
 
 const userApiService = (app: express.Application) => {
     const router = express.Router()
 
-    router.get("/user-api-service,", (req: Request, res: Response) => {
+    router.get("/api/:version/user-api-service,", (req: Request, res: Response) => {
         res.send({ status: 200, success: true })
     })
 
-    // router.get("/")
+    // router.get("/api/:version/")
     // Details
-    router.get("/getUserUsingUuid", userController.userDetailsController)
+    router.get("/api/:version/getUserUsingUuid", userController.userDetailsController)
 
     // Actions
-    router.post("/followUserUsingUid")
-    router.post("/unflollowUserUsingUid")
-    router.get("/getAllUserFollowers")
-    router.get("/getAllPeopleUserFollows")
-    router.post("/doesUserFollowAnotherUserWithUuid")
+    router.post("/api/:version/followUserUsingUid", userController.followUserUsingUuid)
+    router.post("/api/:version/unflollowUserUsingUid", userController.unfollowUserUsingUuid)
+    router.get("/api/:version/getAllUserFollowers", userController.getAllUserFollowers)
+    router.get("/api/:version/getAllPeopleUserFollows", userController.getAllPeopleUserFollows)
+    router.post("/api/:version/doesUserFollowAnotherUserWithUuid", userController.doesUserFollowAnotherUser)
 
-    router.get("/getAllUserArticlesUsingUid")
-    router.get("/getTopNUserArticles")
-    router.get("/getBottomNUserArticles")
+    // todo: make routes with blog schema
+    // router.get("/api/:version/getAllUserArticlesUsingUid")
+    // router.get("/api/:version/getTopNUserArticles")
+    // router.get("/api/:version/getBottomNUserArticles")
 
-    router.get("/deleteUserAccount")
-    router.get("/deleteUserAccountUsingUid")
+    router.post("/api/:version/deleteUserAccount", userController.deleteAccount)
+    
+    // make other party(admin/moderator) only ban account
 
-    router.get("/getAllUserBookmarks")
-    router.get("/removeFromBookmark")
-    router.get("/removeAllBookMarks")
+    // router.get("/deleteUserAccountUsingUid")
 
-    router.get("/AddArticleToHistory")
-    router.get("/getCompleteHistory")
-    router.get("/getHistoryBetweenPeriod/:from/:to")
-    router.get("/eraseFromHistory")
-    router.get("/eraseHistoryBetweenPeriod/:from/:to")
-    router.get("/eraseCompleteHistory")
+    // todo: bookmark features
+    router.get("/api/:version/getAllUserBookmarks")
+    router.get("/api/:version/removeFromBookmark")
+    router.get("/api/:version/removeAllBookMarks")
+
+    // todo: history features
+    router.get("/api/:version/AddArticleToHistory")
+    router.get("/api/:version/getCompleteHistory")
+    router.get("/api/:version/getHistoryBetweenPeriod/:from/:to")
+    router.get("/api/:version/eraseFromHistory")
+    router.get("/api/:version/eraseHistoryBetweenPeriod/:from/:to")
+    router.get("/api/:version/eraseCompleteHistory")
 
     // Settings
-    router.get("/updateUserSettings") //make sub routes
-    router.get("/checkIfSettingsInitialised")
+    router.get("/api/:version/updateUserSettings") //make sub routes
+    router.get("/api/:version/checkIfSettingsInitialised")
     // alter schema
-    router.get("/checkIfUsernameIsUnique")
-    router.get("/checkIfEmailIsUnique")
-    router.get("/changeUserAsNormie")
-    router.get("/changeUserAsModerator")
-    router.get("/changeUserAsAdmin")
+    router.get("/api/:version/checkIfUsernameIsUnique")
+    router.get("/api/:version/checkIfEmailIsUnique")
+    router.get("/api/:version/changeUserAsNormie")
+    router.get("/api/:version/changeUserAsModerator")
+    router.get("/api/:version/changeUserAsAdmin")
 
-    router.get("/banUser")
-    router.get("/banUserPermanently")
-    router.get("/unbanUser")
+    router.get("/api/:version/banUser")
+    router.get("/api/:version/banUserPermanently")
+    router.get("/api/:version/unbanUser")
 
-    
+
     app.use(router)
 }
 

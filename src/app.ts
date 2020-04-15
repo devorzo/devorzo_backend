@@ -2,7 +2,7 @@
 import minimist from "minimist"
 import { initEnv } from "./config/config"
 import express from "express"
-import "ejs"
+// import "ejs"
 import path from "path"
 import bodyParser from "body-parser"
 
@@ -17,26 +17,30 @@ initEnv(argv.env)
 
 
 import Services from "./services/initService"
-import ApiService from "./services/micros/api_service"
-import userApiService from "./services/micros/user_api_service"
-import blogApiService from "./services/micros/blog_api_service"
+
+import adminApiService from "./services/micros/admin_api_service"
+
+import articleApiService from "./services/micros/article_api_service"
 import authService from "./services/micros/auth_service"
+
+import communityApiService from "./services/micros/community_api_service"
+
+import moderationApiService from "./services/micros/content_moderation_service"
+import suggestionApiService from "./services/micros/content_suggestion_service"
+
 import fileService from "./services/micros/file_service"
+
+// import notificationService from "./services/micros/notification_service"
 import uiService from "./services/micros/ui_service"
+
+// import userApiService from "./services/micros/user_api_service"
+
 import logger, { Level } from "./lib/logger"
 import getServiceNames from "./lib/gather_service_names"
 
 
 
-
-
-// logger({ argv }, Level.WARN)
-// logger({ argv }, Level.ERROR)
-// logger({ argv }, Level.VERBOSE)
 logger({ argv }, Level.VERBOSE)
-// logger({ argv }, Level.INFO)
-
-
 
 let app = express()
 
@@ -65,17 +69,22 @@ app.use(session({
 }))
 
 /* view engine */
-app.set("views", path.join(__dirname, "../") + "/views")
-app.set("view engine", "ejs")
+app.use(express.static(path.join(__dirname, "../") + "/build"))
+
+// app.set("views", path.join(__dirname, "../") + "/views")
+// app.set("view engine", "ejs")
 
 /* Services */
 let s = new Services(app)
-s.addService("api-service", ApiService)
-s.addService("blog-api-service", userApiService)
-s.addService("user-api-service", blogApiService)
-s.addService("auth-service", authService)
+s.addService("admin-api-service", adminApiService)
+s.addService("article-api-service", articleApiService)
+s.addService("auth-api-service", authService)
+s.addService("community-api-service", communityApiService)
+s.addService("moderation-api-service", moderationApiService)
+s.addService("suggestion-api-service", suggestionApiService)
 s.addService("file-service", fileService)
-s.addService("ui-service", uiService)
+s.addService("article-api-service", articleApiService)
+// s.addService("ui-service", uiService)
 
 let serviceNames = getServiceNames(argv.service)
 s.serviceInit(serviceNames)
@@ -84,8 +93,14 @@ logger({serviceNames}, Level.VERBOSE)
 
 app.set("port", (process.env.PORT || 5000))
 
+
+
+// res.sendFile(path.join(__dirname + '/client/public/index.html'));
+
 app.get("*", (req, res) => {
-    // res.sendFile(path.join(__dirname + '/client/public/index.html'));
+    // console.log("sent from *")
+    res.sendFile(path.join(__dirname,"../") + "/build/index.html")
+    // res.sendFile(__dirname +".. /build/index.html")
     res.send("404")
 })
 

@@ -8,7 +8,7 @@ import { GridFSBucket, ObjectID } from "mongodb"
 import multer from "multer"
 import GridFSStorage from "multer-gridfs-storage"
 import logger, { Level } from "../../lib/logger"
-logger({ monogo: process.env.MONGODB_URI })
+// logger({ monogo: process.env.MONGODB_URI })
 
 let opts: GridFSStorage.UrlStorageOptions
 opts = {
@@ -46,6 +46,7 @@ const fileService = (app: express.Application) => {
     router.get("/file-service,", (req, res) => {
         res.send({ status: 200 })
     })
+    
     router.post("/upload", upload.single("file"), function (req, res) {
         logger({ file: req.file }, Level.DEBUG)
         res.send({ success: true, file: req.file })

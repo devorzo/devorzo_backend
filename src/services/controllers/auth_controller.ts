@@ -22,7 +22,9 @@ export const registerController = (req: Request, res: Response) => {
                     if (req.session && body.session_persistance) {
                         req.session.xAuth = token
                         req.session.uid = user._id
+                        req.session.user_uuid = user.user_uuid
                         req.session.name = user.email
+                        req.session.logged = true
                     }
                     logger({ user })
 
@@ -30,19 +32,20 @@ export const registerController = (req: Request, res: Response) => {
                         user_uuid: user.user_uuid
                     })
 
-                    follower.save().then(() => {
+                    follower.save().then((d) => {
                         res.setHeader("x-auth", token)
-                        res.send({ success: true, user: user.toJSON(), token })
+                        res.send({ success: true, user: user.toJSON(), token, d })
                     }).catch((e) => {
                         res.setHeader("x-auth", token)
-                        res.send({ success: true, user: user.toJSON(), token, status:{
-                            success:false,
-                            error:{
-                                message: `Error creating follower schema Error: ${e}`
+                        res.send({
+                            success: true, user: user.toJSON(), token, status: {
+                                success: false,
+                                error: {
+                                    message: `Error creating follower schema Error: ${e}`
+                                }
                             }
-                        } })
+                        })
                     })
-
 
                     // res.redirect('/me');
                     // res.header('x-auth', token).redirect(200, '/me', user);

@@ -11,7 +11,7 @@ import { generateHexString } from "../../lib/hex_rand"
 import { IUserDocument, IUser, IUserModel } from "../../interfaces/databaseInterfaces"
 import logger from "../../lib/logger"
 
-logger(generateHexString(128))
+// logger(generateHexString(128))
 
 enum Gender {
     "MALE" = 0,
@@ -162,7 +162,7 @@ UserSchema.methods.generateAuthToken = function () {
     let access = "auth"
     let token = uuid()
     // let token = jwt.sign({ _id: user._id.toHexString(), access }, process.env.JWT_SECRET!).toString()
-    let signed_token = jwt.sign({ _id: user._id.toHexString(), token: token, access }, process.env.JWT_SECRET!).toString()
+    let signed_token = jwt.sign({ _id: user._id.toHexString(), user_uuid: user.user_uuid, token: token, access }, process.env.JWT_SECRET!).toString()
 
     user.tokens.push({ access, token })
 
