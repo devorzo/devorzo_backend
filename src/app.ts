@@ -3,6 +3,7 @@ import minimist from "minimist"
 import { initEnv } from "./config/config"
 import express from "express"
 // import "ejs"
+import cors from "cors"
 import path from "path"
 import bodyParser from "body-parser"
 
@@ -43,7 +44,7 @@ import getServiceNames from "./lib/gather_service_names"
 logger({ argv }, Level.VERBOSE)
 
 let app = express()
-
+app.use(cors())
 /*  Database handlers */
 // eslint-disable-next-line no-unused-vars
 let mongoose = initDb()
@@ -84,7 +85,7 @@ s.addService("moderation-api-service", moderationApiService)
 s.addService("suggestion-api-service", suggestionApiService)
 s.addService("file-service", fileService)
 s.addService("article-api-service", articleApiService)
-// s.addService("ui-service", uiService)
+s.addService("ui-service", uiService)
 
 let serviceNames = getServiceNames(argv.service)
 s.serviceInit(serviceNames)
@@ -101,7 +102,7 @@ app.get("*", (req, res) => {
     // console.log("sent from *")
     res.sendFile(path.join(__dirname,"../") + "/build/index.html")
     // res.sendFile(__dirname +".. /build/index.html")
-    res.send("404")
+    // res.send("404")
 })
 
 app.listen(app.get("port"), process.env.IP!, function () {

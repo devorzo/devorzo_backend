@@ -49,7 +49,7 @@ const fileService = (app: express.Application) => {
     
     router.post("/upload", upload.single("file"), function (req, res) {
         logger({ file: req.file }, Level.DEBUG)
-        res.send({ success: true, file: req.file })
+        res.send({ success: 1, file: `http://localhost:5000/file/${req.file.filename}`,file_info: req.file })
     })
 
     router.get("/test-upload", (req, res) => {
