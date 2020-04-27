@@ -11,7 +11,7 @@ import { responseMessageCreator } from "../../lib/response_message_creator"
 
 
 export const userDetailsController = (req: Request, res: Response) => {
-    let version = req.params.version;
+    let version = req.params.version
 
     if (version == "v1") {
         let body = _.pick(req.body, ["id"])
@@ -36,7 +36,7 @@ export const userDetailsController = (req: Request, res: Response) => {
 }
 
 export const followUserUsingUuid = (req: Request, res: Response) => {
-    let version = req.params.version;
+    let version = req.params.version
     if (version == "v1") {
         let body = _.pick(req.body, ["follower_id", "user_token"])
 
@@ -78,7 +78,7 @@ export const followUserUsingUuid = (req: Request, res: Response) => {
 
 
 export const unfollowUserUsingUuid = (req: Request, res: Response) => {
-    let version = req.params.version;
+    let version = req.params.version
     if (version == "v1") {
         let body = _.pick(req.body, ["follower_id", "user_token"])
 
@@ -118,7 +118,7 @@ export const unfollowUserUsingUuid = (req: Request, res: Response) => {
 }
 
 export const getAllUserFollowers = (req: Request, res: Response) => {
-    let version = req.params.version;
+    let version = req.params.version
     if (version == "v1") {
         let body = _.pick(req.body, ["user_token"])
         let decoded: any = null
@@ -155,7 +155,7 @@ export const getAllUserFollowers = (req: Request, res: Response) => {
 
 
 export const getAllPeopleUserFollows = (req: Request, res: Response) => {
-    let version = req.params.version;
+    let version = req.params.version
     if (version == "v1") {
         let body = _.pick(req.body, ["user_token"])
 
@@ -199,7 +199,7 @@ export const getAllPeopleUserFollows = (req: Request, res: Response) => {
 export const doesUserFollowAnotherUser = (req: Request, res: Response) => {
     // todo: add conformation flag to use userToken from body 3m+
 
-    let version = req.params.version;
+    let version = req.params.version
     if (version == "v1") {
         let body = _.pick(req.body, ["follower_id", "user_token"])
 
@@ -240,7 +240,7 @@ export const doesUserFollowAnotherUser = (req: Request, res: Response) => {
 
 export const deleteAccount = (req: Request, res: Response) => {
 
-    let version = req.params.version;
+    let version = req.params.version
     if (version == "v1") {
         let body = _.pick(req.body, ["user_token", "confirm"])
 
@@ -277,7 +277,7 @@ export const deleteAccount = (req: Request, res: Response) => {
 }
 
 export const getUserArticlesUsingID = (req: Request, res: Response) => {
-    let version = req.params.version;
+    let version = req.params.version
     if (version == "v1") {
         let body = _.pick(req.body, ["user_id", "count", "token"])
 

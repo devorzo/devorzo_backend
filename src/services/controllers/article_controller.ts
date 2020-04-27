@@ -11,9 +11,9 @@ import { responseMessageCreator } from "../../lib/response_message_creator"
 
 
 export const createArticle = (req: Request, res: Response) => {
-    let version = req.params.version;
+    let version = req.params.version
     if (version == "v1") {
-
+        res.send(responseMessageCreator({message: "this is create article route"},1))
     } else {
         res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
     }
@@ -21,10 +21,10 @@ export const createArticle = (req: Request, res: Response) => {
 
 
 export default {
-
+    createArticle
 }
 export const s = (req: Request, res: Response) => {
-    let version = req.params.version;
+    let version = req.params.version
     if (version == "v1") {
 
     } else {

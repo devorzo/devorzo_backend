@@ -1,9 +1,9 @@
 import { Schema, model } from "mongoose"
-import { v4 } from "uuid";
+import { v4 } from "uuid"
 // eslint-disable-next-line no-unused-vars
 import { IArticleDocument, IArticle, IArticleModel } from "../../interfaces/databaseInterfaces"
 
-enum BooleanFlag{
+export enum BooleanFlag{
     NO,
     YES,
     NOT_DECIDED = -1
@@ -56,7 +56,7 @@ const ArticleSchema: Schema = new Schema({
     community_uuid: {
         type: String,
         required: true,
-        default: `NONE`,
+        default: "NONE",
         minlength: 1,
         trim: true
     },
@@ -94,7 +94,7 @@ const ArticleSchema: Schema = new Schema({
 
 
 // todo: pre save generate
-    // - duration and preview
+// - duration and preview
     
 export const Article: IArticleModel = model<IArticle, IArticleModel>("Article", ArticleSchema)
 

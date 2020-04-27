@@ -5,6 +5,8 @@
   "main": "dist/app.js",
   "scripts": {
     "start": "node dist/app.js --service=all --env=production",
+    "linter": "eslint src/**/*.{ts,js,jsx}",
+    "linter:fix":"eslint src/**/*.{ts,js,jsx} --fix",
     "prebuild": "echo prebuild",
     "build": "tsc -b",
     "start:dev": "concurrently \"tsc -w\" \"nodemon dist\\app.js --service=all --env=development\"",
