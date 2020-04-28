@@ -1,5 +1,6 @@
 import express from "express"
-
+import ArticleController from "../../services/controllers/article_controller"
+import Services from "../initService"
 
 const articleApiService = (app: express.Application) => {
     const router = express.Router()
@@ -9,7 +10,7 @@ const articleApiService = (app: express.Application) => {
     })
 
     // router.get("/")
-    router.get("/api/:version/createArticle")
+    router.post("/api/:version/createArticle",ArticleController.createArticle)
     router.get("/api/:version/getArticleByUserId")
     router.get("/api/:version/getArticleByTag")
     router.get("/api/:version/getArticleByCommunityId")

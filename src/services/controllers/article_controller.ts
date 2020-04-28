@@ -13,7 +13,9 @@ import { responseMessageCreator } from "../../lib/response_message_creator"
 export const createArticle = (req: Request, res: Response) => {
     let version = req.params.version;
     if (version == "v1") {
-
+        console.log(req.body)
+        console.log("create article")
+        res.send(responseMessageCreator("this response is from backend",1))
     } else {
         res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
     }
@@ -21,7 +23,7 @@ export const createArticle = (req: Request, res: Response) => {
 
 
 export default {
-
+       createArticle
 }
 export const s = (req: Request, res: Response) => {
     let version = req.params.version;
