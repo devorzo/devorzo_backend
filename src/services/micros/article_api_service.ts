@@ -1,6 +1,11 @@
 import express from "express"
+<<<<<<< HEAD
 import ArticleController from "../../services/controllers/article_controller"
 import Services from "../initService"
+=======
+
+import ArticleController from "../../services/controllers/article_controller"
+>>>>>>> db26d081c55486a767e7d30bb7b4865991b36e6e
 
 const articleApiService = (app: express.Application) => {
     const router = express.Router()
@@ -10,7 +15,11 @@ const articleApiService = (app: express.Application) => {
     })
 
     // router.get("/")
+<<<<<<< HEAD
     router.post("/api/:version/createArticle",ArticleController.createArticle)
+=======
+    router.get("/api/:version/createArticle", ArticleController.createArticle)
+>>>>>>> db26d081c55486a767e7d30bb7b4865991b36e6e
     router.get("/api/:version/getArticleByUserId")
     router.get("/api/:version/getArticleByTag")
     router.get("/api/:version/getArticleByCommunityId")

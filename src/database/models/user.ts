@@ -9,6 +9,7 @@ import { generateHexString } from "../../lib/hex_rand"
 
 // eslint-disable-next-line no-unused-vars
 import { IUserDocument, IUser, IUserModel } from "../../interfaces/databaseInterfaces"
+// eslint-disable-next-line no-unused-vars
 import logger from "../../lib/logger"
 
 // logger(generateHexString(128))
