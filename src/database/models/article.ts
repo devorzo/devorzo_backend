@@ -44,7 +44,8 @@ const ArticleSchema: Schema = new Schema({
         type: String,
         required: true,
         minlength: 1,
-        trim: true
+        trim: true,
+        default: `user.${v4()}`
     },
 
     views: {
