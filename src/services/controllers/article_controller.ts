@@ -15,7 +15,7 @@ export const createArticle = (req: Request, res: Response) => {
     if (version == "v1") {
         if(req.body.title.length > 150)
         {
-             res.send(responseMessageCreator({message : "The title is too long!!!"},0))
+            res.send(responseMessageCreator({message : "The title is too long!!!"},0))
         }
         let ArticleNew = {
             "title"  : req.body.title,
@@ -27,8 +27,8 @@ export const createArticle = (req: Request, res: Response) => {
         console.log(NewArticleInstance)
         
         NewArticleInstance.save(function(err,doc){
-                if (err) return console.log(err)
-                console.log("Article is saved in database sucessfully!")
+            if (err) return console.log(err)
+            console.log("Article is saved in database sucessfully!")
         })
         res.send(responseMessageCreator({message: "Hey, your article is created!!!!!"},1))
     }
