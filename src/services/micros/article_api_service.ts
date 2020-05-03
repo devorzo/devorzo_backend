@@ -11,7 +11,7 @@ const articleApiService = (app: express.Application) => {
 
     // router.get("/")
     router.post("/api/:version/createArticle", ArticleController.createArticle)
-    router.get("/api/:version/getArticleByUserId")
+    router.post("/api/:version/getArticleByUserId",ArticleController.getArticleByUserId)
     router.get("/api/:version/getArticleByTag")
     router.get("/api/:version/getArticleByCommunityId")
 
