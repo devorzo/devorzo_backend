@@ -129,12 +129,105 @@ export const deleteArticleById = (req : Request, res : Response) => {
  } 
 }
 
+export const deleteAllUserArticleByUserId = (req:Request, res:Response) => {
+    let version = req.params.version
+    if (version == "v1") {
+        if (!Object.prototype.hasOwnProperty.call(req.body, "user_id")){
+            res.status(400).send(responseMessageCreator("No user id is provided!", 0))
+            return
+        }
+        const user_id = req.body.user_id
+        Article.exists({author_uuid:user_id}, (err, result) => {
+            if (err) {
+                console.log(err)
+                res.status(500).send(responseMessageCreator("Internal Server Error!!", 0))
+            }
+            if (result) {
+                Article.deleteMany({author_uuid:user_id}, (err) => {
+                    if (err) {
+                        console.log(err)
+                        res.status(500).send(responseMessageCreator("Internal Server Error!", 0))                      
+                    }
+                    else {
+                        res.status(200).send(responseMessageCreator("Articles deleted Successfully", 1))
+                    }            
+                })        
+            }
+            else {
+                res.status(404).send(responseMessageCreator("No article is written by the requested user!", 0))
+            }
+        })
+        
+    }
+    else {
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+
+
+export const deleteAllCommunityArticleByCommunityId = (req:Request, res:Response) => {
+    let version = req.params.version
+    if (version == "v1") {
+        if (!Object.prototype.hasOwnProperty.call(req.body, "community_id")){
+            res.status(400).send(responseMessageCreator("No community id is provided!", 0))
+            return
+        }
+        const community_id = req.body.community_id
+        Article.exists({community_uuid:community_id}).then((result) => {
+            if (result) {
+                Article.deleteMany({community_uuid:community_id}, (err) => {
+                    if (err) {
+                        console.log(err)
+                        res.status(500).send(responseMessageCreator("Internal Server Error!", 0))                      
+                    }
+                    else {
+                        res.status(200).send(responseMessageCreator("Articles of this community deleted Successfully", 1))
+                    }            
+                })
+            }
+            else {
+                res.status(404).send(responseMessageCreator("No articles present in this community!", 0))
+            }
+        }).catch((err)=>{
+            console.log(err)
+            res.status(500).send(responseMessageCreator("Internal Server Error!", 0))
+        })
+        
+        //     Article.exists({community_uuid:community_id}, (err, result) => {
+        //         if (err) {
+        //             console.log(err)
+        //             res.status(500).send(responseMessageCreator("Internal Server Error!!", 0))
+        //         }
+        //         if (result) {
+        //             Article.deleteMany({community_uuid:community_id}, (err) => {
+        //                 if (err) {
+        //                     console.log(err)
+        //                     res.status(500).send(responseMessageCreator("Internal Server Error!", 0))                      
+        //                 }
+        //                 else {
+        //                     res.status(200).send(responseMessageCreator("Articles of this community deleted Successfully", 1))
+        //                 }            
+        //             })        
+        //         }
+        //         else {
+        //             res.status(404).send(responseMessageCreator("No articles present in this community!", 0))
+        //         }
+        //     })
+        
+    }
+    else {
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+
 export default {
     createArticle,
     getArticleByUserId,
     getArticleByCommunityId,
     UpdateArticleById,
-    deleteArticleById
+    deleteArticleById,
+    deleteAllUserArticleByUserId,
+    deleteAllCommunityArticleByCommunityId
 }
 export const s = (req: Request, res: Response) => {
     let version = req.params.version

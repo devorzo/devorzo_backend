@@ -1,6 +1,7 @@
 import express from "express"
 
 import ArticleController from "../../services/controllers/article_controller"
+import Article from "src/database/models/article"
 
 const articleApiService = (app: express.Application) => {
     const router = express.Router()
@@ -11,7 +12,7 @@ const articleApiService = (app: express.Application) => {
 
     // router.get("/")
     router.post("/api/:version/createArticle", ArticleController.createArticle)
-    router.post("/api/:version/getArticleByUserId",ArticleController.getArticleByUserId)
+    router.get("/api/:version/getArticleByUserId", ArticleController.getArticleByUserId)
     router.get("/api/:version/getArticleByTag")
     router.post("/api/:version/getArticleByCommunityId",ArticleController.getArticleByCommunityId) //completed
 
@@ -23,6 +24,12 @@ const articleApiService = (app: express.Application) => {
     router.post("/api/:version/deleteArticleById",ArticleController.deleteArticleById)
     router.get("/api/:version/deleteAllUserArticleByUserId")//gaurav
     router.get("/api/:version/deleteAllCommunityArticleByCommunityId")//gaurav
+    router.get("/api/:version/updateArticleById")
+    router.get("/api/:version/updateTagsByArticleId")//gaurav
+    
+    router.get("/api/:version/deleteArticleById")
+    router.delete("/api/:version/deleteAllUserArticleByUserId", ArticleController.deleteAllUserArticleByUserId)//gaurav
+    router.delete("/api/:version/deleteAllCommunityArticleByCommunityId", ArticleController.deleteAllCommunityArticleByCommunityId)//gaurav
     
     // router.get("/api/:version/")
     
