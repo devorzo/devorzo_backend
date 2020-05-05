@@ -13,16 +13,16 @@ const articleApiService = (app: express.Application) => {
     router.post("/api/:version/createArticle", ArticleController.createArticle)
     router.post("/api/:version/getArticleByUserId",ArticleController.getArticleByUserId)
     router.get("/api/:version/getArticleByTag")
-    router.get("/api/:version/getArticleByCommunityId")
+    router.post("/api/:version/getArticleByCommunityId",ArticleController.getArticleByCommunityId) //completed
 
-    router.get("/api/:version/getTagsByArticleId")
+    router.get("/api/:version/getTagsByArticleId")//gaurav
         
-    router.get("/api/:version/updateArticleById")
-    router.get("/api/:version/updateTagsByArticleId")
+    router.post("/api/:version/updateArticleById",ArticleController.UpdateArticleById)
+    router.get("/api/:version/updateTagsByArticleId")//gaurav
     
-    router.get("/api/:version/deleteArticleById")
-    router.get("/api/:version/deleteAllUserArticleByUserId")
-    router.get("/api/:version/deleteAllCommunityArticleByCommunityId")
+    router.post("/api/:version/deleteArticleById",ArticleController.deleteArticleById)
+    router.get("/api/:version/deleteAllUserArticleByUserId")//gaurav
+    router.get("/api/:version/deleteAllCommunityArticleByCommunityId")//gaurav
     
     // router.get("/api/:version/")
     

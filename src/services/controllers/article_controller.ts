@@ -67,11 +67,74 @@ export const getArticleByUserId = (req: Request, res : Response) =>{
         res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
     }
 }
+export const getArticleByCommunityId = (req: Request, res : Response) =>{
+    let version = req.params.version
+    if(version == "v1")
+    {
+       let communityId : string = req.body.community_uuid
+       let query =  Article.find({community_uuid : communityId})
+       query.sort("-date")
+       let promise  = query.exec(function(err,doc){
+        if(err) return console.log(err)
+        if(doc.length == 0)
+            res.send(responseMessageCreator({message: "Sorry!!! No article in this community"},1))
+        else 
+            res.send(doc)
+    })
 
+
+    }
+    else{
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+export const UpdateArticleById = (req : Request, res : Response) =>{
+    let version = req.params.version
+    if(version=="v1")
+    {
+        if(!req.body.hasOwnProperty("title"))
+        {
+            res.send(responseMessageCreator({message: "Please enter the title of your article!!"},0))
+        }
+        if(!req.body.hasOwnProperty("content"))
+        {
+            res.send(responseMessageCreator({message: "Please enter the content of your article!!"},0))
+        }
+        
+        
+        Article.findOneAndUpdate({article_uuid : req.body.article_uuid},{title : req.body.title, content : req.body.content,  preview : req.body.content.substring(0,10) + "....."}, function(err,docs){
+            if (err) {
+                res.send(err);
+              } else {
+                res.send(docs);
+              }
+        })
+    }
+    else{
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+export const deleteArticleById = (req : Request, res : Response) => {
+ let version = req.params.version
+ if(version == "v1")
+ {
+     Article.deleteOne({article_uuid : req.body.article_uuid}, function(err){
+         if(err) console.log(err)
+         else
+         res.send(responseMessageCreator("This article is deleted successfully!!!",1))
+     })
+ }
+ else{
+     res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+ } 
+}
 
 export default {
     createArticle,
-    getArticleByUserId
+    getArticleByUserId,
+    getArticleByCommunityId,
+    UpdateArticleById,
+    deleteArticleById
 }
 export const s = (req: Request, res: Response) => {
     let version = req.params.version
