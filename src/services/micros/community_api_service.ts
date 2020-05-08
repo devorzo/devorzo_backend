@@ -5,6 +5,9 @@ import express from "express"
 // let reactController = require("../controllers/reactController")
 // let { registerController, loginController, logoutController } = require("../controllers/authUserController")
 // let { auth, auth_semi } = require("../middlewares/auth")
+import community_api_controller from "../../services/controllers/community_api_controller"
+
+import community from "src/database/models/communities"
 
 const communityApiService = (app: express.Application) => {
     const router = express.Router()
@@ -14,7 +17,7 @@ const communityApiService = (app: express.Application) => {
     })
     
     // router.get("/api/:version/")
-    router.get("/api/:version/createCommunity")
+    router.post("/api/:version/createCommunity",community_api_controller.createCommunity)
     router.get("/api/:version/deleteCommunity")
     router.get("/api/:version/addUserToCommunity")
     router.get("/api/:version/removeUserFromCommunity")
@@ -33,4 +36,6 @@ const communityApiService = (app: express.Application) => {
     app.use(router)
 }
 
-export default communityApiService
+export default {
+    communityApiService
+}
