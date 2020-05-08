@@ -71,7 +71,7 @@ export const getArticleByCommunityId = (req: Request, res : Response) =>{
     let version = req.params.version
     if(version == "v1")
     {
-       let communityId : string = req.body.community_uuid
+        let communityId : string = req.body.community_uuid
        let query =  Article.find({community_uuid : communityId})
        query.sort("-date")
        let promise  = query.exec(function(err,doc){
