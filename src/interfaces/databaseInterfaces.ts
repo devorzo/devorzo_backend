@@ -42,14 +42,20 @@ export interface IUser extends IUserDocument {
     // methods here! 
     toJSON(): { _id: Types.ObjectId, email: string }
     generateAuthToken(): any
+    generateVerifyToken(): any
+    generateResetToken(): any
+
+    removeAllVerificationToken(): any
+    removeAllResetToken(): any
 }
 
 export interface IUserModel extends Model<IUser> {
     // statics here
     removeAuthToken(token: any): any
     findByCredentials(email: string, password: string): any
+    isUsernameUnique(username: string): any
     accountExists(email: string): any
-    findByToken(token: any): any
+    findByToken(token: any, access: string): any
 }
 
 
