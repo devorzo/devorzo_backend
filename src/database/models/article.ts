@@ -59,7 +59,8 @@ const ArticleSchema: Schema = new Schema({
         required: true,
         default: "NONE",
         minlength: 1,
-        trim: true
+        trim: true,
+        //default: `user.${v4()}`
     },
 
     belongs_to_community:{
