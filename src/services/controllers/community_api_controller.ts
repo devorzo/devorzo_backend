@@ -13,7 +13,7 @@ import logger, { Level } from "../../lib/logger"
 import { responseMessageCreator } from "../../lib/response_message_creator"
 import Article from "../../database/models/article"
 import { decodeBase64 } from "bcryptjs"
-import { Mongoose, Query } from "mongoose"
+import { Mongoose, Query, Types} from "mongoose"
 import Community from "../../database/models/communities"
 export const createCommunity = (req : Request, res: Response) => {
     let version = req.params.version
@@ -60,9 +60,14 @@ export const deleteCommunity = (req : Request, res: Response) => {
     let version = req.params.version
     if(version == "v1"){
         if (!Object.prototype.hasOwnProperty.call(req.body, "id")){
-            res.status(400).send(responseMessageCreator({message:"Please provide the id of the community to be deleted"}, 1))
+            res.status(400).send(responseMessageCreator({message:"Please provide the id of the community to be deleted"}, 0))
+            return
         }                  
         let id = req.body.id
+        if (!Types.ObjectId.isValid(id)){
+            res.status(400).send(responseMessageCreator("Argument passed in must be a single String of 12 bytes or a string of 24 hex characters", 0))
+            return
+        }
         Community.exists({_id:id}).then((result) => {
             if (result) {
                 Community.deleteMany({_id:id}, (err) => {
@@ -89,7 +94,125 @@ export const deleteCommunity = (req : Request, res: Response) => {
 
 }
 
+export const modifyCommunityDetails = (req: Request, res: Response) => {
+    let version = req.params.version
+    if (version == "v1"){
+
+    }   
+    else{
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+
+export const setCommunityRules = (req: Request, res: Response) => {
+    let version = req.params.version
+    if (version == "v1"){
+        if (!Object.prototype.hasOwnProperty.call(req.body, "id")){
+            res.status(400).send(responseMessageCreator("Please provide the id of the community!", 0))
+            return
+        }
+        if (!Object.prototype.hasOwnProperty.call(req.body, "rules")){
+            res.status(400).send(responseMessageCreator("Please provide the rules for that community!", 0))
+            return
+        }
+        let id = req.body.id
+        let rules = req.body.rules
+        if (!Types.ObjectId.isValid(id)){
+            res.status(400).send(responseMessageCreator("Invalid Id provided", 0))
+            return
+        }
+        if (rules.length == 0){
+            res.status(400).send(responseMessageCreator("Provide Some rules", 0))
+            return
+        }
+        Community.exists({_id:id}).then((result)=>{
+            if (result){
+                Community.findByIdAndUpdate(id,{"rules":rules}).then((result) => {
+                    res.status(200).send(result)
+                }).catch((err)=>{
+                    res.status(500).send(responseMessageCreator("Internal Server Error!", 0))
+                    console.log(err)
+                })
+            }
+            else{
+                res.status(404).send(responseMessageCreator("No Such Community!", 0))
+            }
+        }).catch((err)=>{
+            res.status(500).send(responseMessageCreator("Internal Server Error!", 0))
+            console.log(err)
+        })
+
+    }   
+    else{
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+export const setCommunityAbout = (req: Request, res: Response) => {
+    let version = req.params.version
+    if (version == "v1"){
+        if (!Object.prototype.hasOwnProperty.call(req.body, "id")){
+            res.status(400).send(responseMessageCreator("Please provide the id of the community!", 0))
+            return
+        }
+        if (!Object.prototype.hasOwnProperty.call(req.body, "about")){
+            res.status(400).send(responseMessageCreator("Please tell us about that community!", 0))
+            return
+        }
+        let id = req.body.id
+        let about = req.body.about
+        if (!Types.ObjectId.isValid(id)){
+            res.status(400).send(responseMessageCreator("Invalid Id provided", 0))
+            return
+        }
+        if (about.length == 0){
+            res.status(400).send(responseMessageCreator("Provide Something in about", 0))
+            return
+        }
+        Community.exists({_id:id}).then((result)=>{
+            if (result){
+                Community.findByIdAndUpdate(id,{"about":about}).then((result) => {
+                    res.status(200).send(result)
+                }).catch((err)=>{
+                    res.status(500).send(responseMessageCreator("Internal Server Error!", 0))
+                    console.log(err)
+                })
+            }
+            else{
+                res.status(404).send(responseMessageCreator("No Such Community!", 0))
+            }
+        }).catch((err)=>{
+            res.status(500).send(responseMessageCreator("Internal Server Error!", 0))
+            console.log(err)
+        })
+    }   
+    else{
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+export const setCommunitySettings = (req: Request, res: Response) => {
+    let version = req.params.version
+    if (version == "v1"){
+        
+    }   
+    else{
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+
+export const setCommunityTheme = (req: Request, res: Response) => {
+    let version = req.params.version
+    if (version == "v1"){
+        
+    }   
+    else{
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+
+
 export default{
     createCommunity,
-    deleteCommunity
+    deleteCommunity,
+    setCommunityRules,
+    setCommunityAbout
 }

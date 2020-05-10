@@ -18,15 +18,15 @@ const communityApiService = (app: express.Application) => {
 
     // router.get("/api/:version/")
     router.post("/api/:version/createCommunity", community_api_controller.createCommunity)
-    router.get("/api/:version/deleteCommunity")
+    router.delete("/api/:version/deleteCommunity", community_api_controller.deleteCommunity)
     router.get("/api/:version/addUserToCommunity")
     router.get("/api/:version/removeUserFromCommunity")
 
-    router.get("/api/:version/modifyCommunityDetails")
-    router.get("/api/:version/setCommunityRules")
-    router.get("/api/:version/setCommunityAbout")
-    router.get("/api/:version/setCommunitySettings")
-    router.get("/api/:version/setCommunityTheme")
+    router.post("/api/:version/modifyCommunityDetails")
+    router.post("/api/:version/setCommunityRules", community_api_controller.setCommunityRules)
+    router.post("/api/:version/setCommunityAbout", community_api_controller.setCommunityAbout)
+    router.post("/api/:version/setCommunitySettings")
+    router.post("/api/:version/setCommunityTheme")
 
 
     // router.get("/api/:version/")
