@@ -18,7 +18,7 @@ const communityApiService = (app: express.Application) => {
     
     // router.get("/api/:version/")
     router.post("/api/:version/createCommunity",community_api_controller.createCommunity)
-    router.get("/api/:version/deleteCommunity")
+    router.get("/api/:version/deleteCommunity", community_api_controller.deleteCommunity)
     router.get("/api/:version/addUserToCommunity")
     router.get("/api/:version/removeUserFromCommunity")
 

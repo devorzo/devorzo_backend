@@ -56,6 +56,40 @@ export const createCommunity = (req : Request, res: Response) => {
 
 }
 
+export const deleteCommunity = (req : Request, res: Response) => {
+    let version = req.params.version
+    if(version == "v1"){
+        if (!Object.prototype.hasOwnProperty.call(req.body, "id")){
+            res.status(400).send(responseMessageCreator({message:"Please provide the id of the community to be deleted"}, 1))
+        }                  
+        let id = req.body.id
+        Community.exists({_id:id}).then((result) => {
+            if (result) {
+                Community.deleteMany({_id:id}, (err) => {
+                    if (err) {
+                        console.log(err)
+                        res.status(500).send(responseMessageCreator("Internal Server Error!", 0))                      
+                    }
+                    else {
+                        res.status(200).send(responseMessageCreator("Community deleted Sucessfully!", 1))
+                    }            
+                })
+            }
+            else {
+                res.status(404).send(responseMessageCreator("No Such Community!", 0))
+            }
+        }).catch((err)=>{
+            console.log(err)
+            res.status(500).send(responseMessageCreator("Internal Server Error!", 0))
+        })
+    }
+    else{
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+
+}
+
 export default{
-    createCommunity
+    createCommunity,
+    deleteCommunity
 }
