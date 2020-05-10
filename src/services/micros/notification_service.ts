@@ -1,19 +1,27 @@
 import express from "express"
 // import path from "path"
 // import _ from "lodash"
+import Notifications from "../controllers/notification_controller"
 
-// let reactController = require("../controllers/reactController")
-// let { registerController, loginController, logoutController } = require("../controllers/authUserController")
-// let { auth, auth_semi } = require("../middlewares/auth")
-
+import { auth_middleware_wrapper_IS_LOGGED_IN } from "../middleware/auth_middleware"
 const notificationApiService = (app: express.Application) => {
     const router = express.Router()
 
-    router.get("/notification-service,", (req, res) => {
-        res.send({ status: 200, success:true })
+    router.get("/notification-service", (req, res) => {
+        res.send({ status: 200, success: true })
     })
-    
+
+    router.post("/api/:version/sendEmailVerificationEmail",
+        auth_middleware_wrapper_IS_LOGGED_IN,
+        Notifications.sendVerificationEmail)
+
+    router.post("/api/:version/sendPasswordResetEmail",
+        auth_middleware_wrapper_IS_LOGGED_IN,
+        Notifications.sendPasswordResetEmail)
     app.use(router)
+
+
+    // todo: api for news letter
 }
 
 export default notificationApiService

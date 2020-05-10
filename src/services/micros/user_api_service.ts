@@ -3,13 +3,14 @@ import express, { Request, Response } from "express"
 
 import userController from "../../services/controllers/user_api_controller"
 
-// let { registerController, loginController, logoutController } = require("../controllers/authUserController")
-// let { auth, auth_semi } = require("../middlewares/auth")
+import { auth_middleware_wrapper_IS_LOGGED_IN } from "../middleware/auth_middleware"
+
 
 const userApiService = (app: express.Application) => {
     const router = express.Router()
 
-    router.get("/api/:version/user-api-service,", (req: Request, res: Response) => {
+    router.get("/api/:version/user-api-service", (req: Request, res: Response) => {
+        console.log("user api status")
         res.send({ status: 200, success: true })
     })
 
@@ -18,19 +19,37 @@ const userApiService = (app: express.Application) => {
     router.get("/api/:version/getUserUsingUuid", userController.userDetailsController)
 
     // Actions
-    router.post("/api/:version/followUserUsingUid", userController.followUserUsingUuid)
-    router.post("/api/:version/unflollowUserUsingUid", userController.unfollowUserUsingUuid)
-    router.get("/api/:version/getAllUserFollowers", userController.getAllUserFollowers)
-    router.get("/api/:version/getAllPeopleUserFollows", userController.getAllPeopleUserFollows)
-    router.post("/api/:version/doesUserFollowAnotherUserWithUuid", userController.doesUserFollowAnotherUser)
+    router.post("/api/:version/followUserUsingUid",
+        auth_middleware_wrapper_IS_LOGGED_IN,
+        userController.followUserUsingUuid)
+    router.post("/api/:version/unflollowUserUsingUid",
+        auth_middleware_wrapper_IS_LOGGED_IN,
+        userController.unfollowUserUsingUuid)
+    router.get("/api/:version/getAllUserFollowers",
+        auth_middleware_wrapper_IS_LOGGED_IN,
+        userController.getAllUserFollowers)
+    router.get("/api/:version/getAllPeopleUserFollows",
+        auth_middleware_wrapper_IS_LOGGED_IN,
+        userController.getAllPeopleUserFollows)
+    router.post("/api/:version/doesUserFollowAnotherUserWithUuid",
+        auth_middleware_wrapper_IS_LOGGED_IN,
+        userController.doesUserFollowAnotherUser)
 
     // todo: make routes with blog schema
     // router.get("/api/:version/getAllUserArticlesUsingUid")
     // router.get("/api/:version/getTopNUserArticles")
     // router.get("/api/:version/getBottomNUserArticles")
 
-    router.post("/api/:version/deleteUserAccount", userController.deleteAccount)
-    
+    // Settings
+    router.post("/api/:version/updateUserSettings",
+        auth_middleware_wrapper_IS_LOGGED_IN,
+        userController.updateUserSetting) //make sub routes
+    // router.get("/api/:version/checkIfSettingsInitialised")
+
+    router.post("/api/:version/deleteUserAccount",
+        auth_middleware_wrapper_IS_LOGGED_IN,
+        userController.deleteAccount)
+
     // make other party(admin/moderator) only ban account
 
     // router.get("/deleteUserAccountUsingUid")
@@ -48,9 +67,7 @@ const userApiService = (app: express.Application) => {
     router.get("/api/:version/eraseHistoryBetweenPeriod/:from/:to")
     router.get("/api/:version/eraseCompleteHistory")
 
-    // Settings
-    router.get("/api/:version/updateUserSettings") //make sub routes
-    router.get("/api/:version/checkIfSettingsInitialised")
+
     // alter schema
     router.get("/api/:version/checkIfUsernameIsUnique")
     router.get("/api/:version/checkIfEmailIsUnique")
@@ -58,6 +75,7 @@ const userApiService = (app: express.Application) => {
     router.get("/api/:version/changeUserAsModerator")
     router.get("/api/:version/changeUserAsAdmin")
 
+    // admin api
     router.get("/api/:version/banUser")
     router.get("/api/:version/banUserPermanently")
     router.get("/api/:version/unbanUser")

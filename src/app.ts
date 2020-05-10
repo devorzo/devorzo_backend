@@ -4,13 +4,13 @@ import { initEnv } from "./config/config"
 import express from "express"
 // import "ejs"
 import cors from "cors"
-import path from "path"
+// import path from "path"
 import bodyParser from "body-parser"
 
 import initDb from "./database/mongoose"
 import session from "express-session"
 import { default as connectMongoDBSession } from "connect-mongodb-session"
-import {v4 as uuid } from "uuid"
+import { v4 as uuid } from "uuid"
 
 
 let argv = minimist(process.argv.slice(2))
@@ -34,7 +34,8 @@ import fileService from "./services/micros/file_service"
 // import notificationService from "./services/micros/notification_service"
 import uiService from "./services/micros/ui_service"
 
-// import userApiService from "./services/micros/user_api_service"
+import userApiService from "./services/micros/user_api_service"
+import notificationApiService from "./services/micros/notification_service"
 
 import logger, { Level } from "./lib/logger"
 import getServiceNames from "./lib/gather_service_names"
@@ -70,7 +71,7 @@ app.use(session({
 }))
 
 /* view engine */
-app.use(express.static(path.join(__dirname, "../") + "/build"))
+// app.use(express.static(path.join(__dirname, "../") + "/build"))
 
 // app.set("views", path.join(__dirname, "../") + "/views")
 // app.set("view engine", "ejs")
@@ -86,10 +87,12 @@ s.addService("suggestion-api-service", suggestionApiService)
 s.addService("file-service", fileService)
 s.addService("article-api-service", articleApiService)
 s.addService("ui-service", uiService)
+s.addService("user-service", userApiService)
+s.addService("notification-service", notificationApiService)
 
 let serviceNames = getServiceNames(argv.service)
 s.serviceInit(serviceNames)
-logger({serviceNames}, Level.VERBOSE)
+logger({ serviceNames }, Level.VERBOSE)
 
 
 app.set("port", (process.env.PORT || 5000))
@@ -100,12 +103,12 @@ app.set("port", (process.env.PORT || 5000))
 
 app.get("*", (req, res) => {
     // console.log("sent from *")
-    res.sendFile(path.join(__dirname,"../") + "/build/index.html")
+    // res.sendFile(path.join(__dirname, "../") + "/build/index.html")
     // res.sendFile(__dirname +".. /build/index.html")
-    // res.send("404")
+    res.send("404")
 })
 
 app.listen(app.get("port"), process.env.IP!, function () {
-    logger(`Server started at ${app.get("port")}`,Level.INFO)
+    logger(`Server started at ${app.get("port")}`, Level.INFO)
     logger(`env: ${process.env.NODE_ENV}`)
 })

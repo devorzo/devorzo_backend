@@ -8,7 +8,7 @@ import { Request, Response } from "express"
 import logger, { Level } from "../../lib/logger"
 import { responseMessageCreator } from "../../lib/response_message_creator"
 
-
+import { cleanObject } from "../../lib/clean_object"
 
 export const userDetailsController = (req: Request, res: Response) => {
     let version = req.params.version
@@ -305,6 +305,48 @@ export const getUserArticlesUsingID = (req: Request, res: Response) => {
     }
 }
 
+export const updateUserSetting = (req: Request, res: Response) => {
+    let version = req.params.version;
+    if (version == "v1") {
+        let body = _.pick(req.body, ["fullname", "user_bio", "gender", "profile_image_link"])
+
+        let data: any = {}
+        body = cleanObject(body)
+        console.log({ body })
+
+        Object.entries(body).forEach(([key, value]) => {
+            data[`details.${key}`] = value
+        });
+
+        console.log({ data })
+        if (!(Object.keys(body).length === 0)) {
+
+            if (Object.keys(body).length === 4 || req.body.initialiseUser == 1) {
+                data['account_initialised'] = 1
+            }
+            User.findOneAndUpdate({
+                user_uuid: req.user.user_uuid
+            }, {
+                $set: {
+                    ...data
+                }
+            }, {
+                new: true
+            }).then((doc) => {
+                res.send(responseMessageCreator({ doc }, 1))
+            }).catch((e) => {
+                res.status(400).send(responseMessageCreator({ e }, 0))
+            })
+
+        } else {
+            res.send(responseMessageCreator("Invalid data provided", 0))
+        }
+
+    } else {
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+
 export default {
     userDetailsController,
 
@@ -314,7 +356,9 @@ export default {
     getAllPeopleUserFollows,
     doesUserFollowAnotherUser,
 
-    deleteAccount
+    deleteAccount,
+
+    updateUserSetting
 }
 
 // export const s = (req: Request, res: Response) => {
