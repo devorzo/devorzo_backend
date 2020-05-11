@@ -82,6 +82,8 @@ export interface IArticleDocument extends Document {
     content: string;
     preview: string;
 
+    edited: number;
+    last_edited_on: number,
     created_on: number;
 
     author_uuid: string;
@@ -100,6 +102,10 @@ export interface IArticleDocument extends Document {
     likes: {
         user_uuid: string;
         liked_on: number;
+    }[];
+    tags: {
+        tag: string,
+        added_on: number
     }[];
 }
 
