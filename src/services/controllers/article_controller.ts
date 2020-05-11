@@ -11,7 +11,7 @@ import Article from "../../database/models/article"
 export const createArticle = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1") {
-        let body = _.pick(req.body, ["title", "content", "preview", "community_uuid"])
+        let body = _.pick(req.body, ["title", "content", "preview", "community_id"])
 
         if (body.title == null) {
             res.status(400).send(responseMessageCreator("Invalid article title", 0))
@@ -29,9 +29,9 @@ export const createArticle = (req: Request, res: Response) => {
                 "content": body.content,
                 "created_on": Date.now(),
                 "preview": body.preview,
-                "author_uuid": req.user.user_uuid,
-                "community_uuid": (!body.community_uuid) ? "NA" : body.community_uuid,
-                "belongs_to_community": (!body.community_uuid) ? 0 : 1,
+                "author_id": req.user.user_id,
+                "community_id": (!body.community_id) ? "NA" : body.community_id,
+                "belongs_to_community": (!body.community_id) ? 0 : 1,
             }
             let articleInstance = new Article(article) // document
 
@@ -52,16 +52,16 @@ export const createArticle = (req: Request, res: Response) => {
     }
 }
 
-export const getArticleByUuid = (req: Request, res: Response) => {
+export const getArticleById = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1") {
-        let body = _.pick(req.body, ["article_uuid"])
+        let body = _.pick(req.body, ["article_id"])
 
-        if (body.article_uuid == null) {
-            res.status(400).send(responseMessageCreator("Invalid article uuid", 0))
+        if (body.article_id == null) {
+            res.status(400).send(responseMessageCreator("Invalid article id", 0))
         } else {
             Article.findOne({
-                article_uuid: body.article_uuid
+                article_id: body.article_id
             }).then((doc: any) => {
                 if (doc) {
                     console.log(doc)
@@ -75,16 +75,16 @@ export const getArticleByUuid = (req: Request, res: Response) => {
         res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
     }
 }
-export const getArticlesByUserUuid = (req: Request, res: Response) => {
+export const getArticlesByUserId = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1") {
 
-        let body = _.pick(req.body, ["author_uuid"])
-        if (body.author_uuid == null) {
-            res.status(400).send(responseMessageCreator("Invalid author uuid", 0))
+        let body = _.pick(req.body, ["author_id"])
+        if (body.author_id == null) {
+            res.status(400).send(responseMessageCreator("Invalid author id", 0))
         } else {
             Article.find({
-                author_uuid: body.author_uuid
+                author_id: body.author_id
             }).then((doc: any) => {
                 if (doc) {
 
@@ -93,9 +93,9 @@ export const getArticlesByUserUuid = (req: Request, res: Response) => {
                         doc = doc.map((item: any) => {
 
                             let d = _.pick(item, ["created_on",
-                                "article_uuid",
+                                "article_id",
                                 "views",
-                                "community_uuid",
+                                "community_id",
                                 "belongs_to_community",
                                 "moderation_status",
                                 "duration_of_article",
@@ -126,13 +126,13 @@ export const getArticlesByUserUuid = (req: Request, res: Response) => {
 export const getArticleByCommunityId = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1") {
-        let body = _.pick(req.body, ["community_uuid"])
+        let body = _.pick(req.body, ["community_id"])
 
-        if (body.community_uuid == null || body.community_uuid == "NA") {
-            res.status(400).send(responseMessageCreator("Invalid community uuid", 0))
+        if (body.community_id == null || body.community_id == "NA") {
+            res.status(400).send(responseMessageCreator("Invalid community id", 0))
         } else {
             Article.find({
-                community_uuid: body.community_uuid
+                community_id: body.community_id
             }).then((doc: any) => {
                 if (doc) {
                     console.log(doc)
@@ -150,9 +150,9 @@ export const getArticleByCommunityId = (req: Request, res: Response) => {
 export const UpdateArticleById = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1") {
-        let body = _.pick(req.body, ["title", "content", "preview", "article_uuid"])
-        if (body.article_uuid == null) {
-            res.status(400).send(responseMessageCreator("Invalid article uuid", 0))
+        let body = _.pick(req.body, ["title", "content", "preview", "article_id"])
+        if (body.article_id == null) {
+            res.status(400).send(responseMessageCreator("Invalid article id", 0))
         } else if (body.title == null) {
             res.status(400).send(responseMessageCreator("Invalid article title", 0))
         } else if (body.title.length > 150) {
@@ -164,12 +164,12 @@ export const UpdateArticleById = (req: Request, res: Response) => {
         } else {
 
             Article.exists({
-                article_uuid: body.article_uuid
+                article_id: body.article_id
             }).then((doc: any) => {
                 if (doc) {
-                    if (doc.author_uuid == req.user.user_uuid) {
+                    if (doc.author_id == req.user.user_id) {
                         Article.findOneAndUpdate({
-                            article_uuid: body.article_uuid
+                            article_id: body.article_id
                         }, {
                             title: body.title,
                             content: body.content,
@@ -199,24 +199,24 @@ export const UpdateArticleById = (req: Request, res: Response) => {
 export const deleteArticleById = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1") {
-        // Article.deleteOne({ article_uuid: req.body.article_uuid }, function (err) {
+        // Article.deleteOne({ article_id: req.body.article_id }, function (err) {
         //     if (err) logger(err)
         //     else
         //         res.send(responseMessageCreator("Article has been deleted", 1))
         // })
 
-        let body = _.pick(req.body, ["article_uuid"])
+        let body = _.pick(req.body, ["article_id"])
 
-        if (body.article_uuid == null) {
+        if (body.article_id == null) {
             res.send(responseMessageCreator("Invalid article id", 0))
         } else {
             Article.exists({
-                article_uuid: body.article_uuid
+                article_id: body.article_id
             }).then((doc: any) => {
                 if (doc) {
-                    if (doc.author_uuid == req.user.user_uuid) {
+                    if (doc.author_id == req.user.user_id) {
                         Article.deleteOne({
-                            article_uuid: body.article_uuid
+                            article_id: body.article_id
                         }).then((d) => {
                             res.send(responseMessageCreator({ data: d }, 1))
                         }).catch((e) => {
@@ -240,18 +240,18 @@ export const deleteArticleById = (req: Request, res: Response) => {
 export const deleteAllUserArticleByUserId = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1") {
-        let body = _.pick(req.body, ["author_uuid"])
+        let body = _.pick(req.body, ["author_id"])
 
-        if (body.author_uuid == null) {
+        if (body.author_id == null) {
             res.status(400).send(responseMessageCreator("Invalid user id", 0))
         } else {
             Article.exists({
-                author_uuid: body.author_uuid
+                author_id: body.author_id
             }).then((doc) => {
                 if (doc) {
-                    if (body.author_uuid == req.user.user_uuid) {
+                    if (body.author_id == req.user.user_id) {
                         Article.deleteMany({
-                            author_uuid: body.author_uuid
+                            author_id: body.author_id
                         }).then((doc) => {
                             if (doc) {
                                 res.send(responseMessageCreator("Successfully deleted all articles", 1))
@@ -284,9 +284,9 @@ export const deleteAllCommunityArticleByCommunityId = (req: Request, res: Respon
             return
         }
         const community_id = req.body.community_id
-        Article.exists({ community_uuid: community_id }).then((result) => {
+        Article.exists({ community_id: community_id }).then((result) => {
             if (result) {
-                Article.deleteMany({ community_uuid: community_id }, (err) => {
+                Article.deleteMany({ community_id: community_id }, (err) => {
                     if (err) {
                         logger(err)
                         res.status(500).send(responseMessageCreator("Internal Server Error!", 0))
@@ -311,8 +311,8 @@ export const deleteAllCommunityArticleByCommunityId = (req: Request, res: Respon
 
 export default {
     createArticle,
-    getArticleByUuid,
-    getArticlesByUserUuid,
+    getArticleById,
+    getArticlesByUserId,
     getArticleByCommunityId,
     UpdateArticleById,
     deleteArticleById,

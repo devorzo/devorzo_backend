@@ -43,14 +43,14 @@ const ArticleSchema: Schema = new Schema({
         requried: true
     },
 
-    article_uuid: {
+    article_id: {
         type: String,
         required: true,
         default: `article.${v4()}`,
         minlength: 1,
         trim: true
     },
-    author_uuid: {
+    author_id: {
         type: String,
         required: true,
         minlength: 1,
@@ -63,7 +63,7 @@ const ArticleSchema: Schema = new Schema({
         required: true
     },
 
-    community_uuid: {
+    community_id: {
         type: String,
         required: true,
         default: "NA",
@@ -89,7 +89,7 @@ const ArticleSchema: Schema = new Schema({
     },
 
     likes: [{
-        user_uuid: {
+        user_id: {
             type: String,
             required: true
         },

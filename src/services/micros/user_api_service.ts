@@ -16,22 +16,22 @@ const userApiService = (app: express.Application) => {
 
     // router.get("/api/:version/")
     // Details
-    router.get("/api/:version/getUserUsingUuid", userController.userDetailsController)
+    router.get("/api/:version/getUserUsingId", userController.userDetailsController)
 
     // Actions
     router.post("/api/:version/followUserUsingUid",
         auth_middleware_wrapper_IS_LOGGED_IN,
-        userController.followUserUsingUuid)
+        userController.followUserUsingId)
     router.post("/api/:version/unflollowUserUsingUid",
         auth_middleware_wrapper_IS_LOGGED_IN,
-        userController.unfollowUserUsingUuid)
+        userController.unfollowUserUsingId)
     router.get("/api/:version/getAllUserFollowers",
         auth_middleware_wrapper_IS_LOGGED_IN,
         userController.getAllUserFollowers)
     router.get("/api/:version/getAllPeopleUserFollows",
         auth_middleware_wrapper_IS_LOGGED_IN,
         userController.getAllPeopleUserFollows)
-    router.post("/api/:version/doesUserFollowAnotherUserWithUuid",
+    router.post("/api/:version/doesUserFollowAnotherUserWithId",
         auth_middleware_wrapper_IS_LOGGED_IN,
         userController.doesUserFollowAnotherUser)
 

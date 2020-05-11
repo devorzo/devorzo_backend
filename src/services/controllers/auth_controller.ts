@@ -34,7 +34,7 @@ export const registerController = (req: Request, res: Response) => {
             "username": body.username
         },
         "password": body.password,
-        "user_uuid": `user.${uuid()}`
+        "user_id": `user.${uuid()}`
     })
     // if (process.env.REG_MODE == 1) {
     User.isUsernameUnique(body.username).then(function (isUnique: any) {
@@ -48,14 +48,14 @@ export const registerController = (req: Request, res: Response) => {
                             // if (req.session && body.session_persistance) {
                             //     req.session.xAuth = token
                             //     req.session.uid = user._id
-                            //     req.session.user_uuid = user.user_uuid
+                            //     req.session.user_id = user.user_id
                             //     req.session.name = user.email
                             //     req.session.logged = true
                             // }
                             logger({ user })
 
                             let follower = new Follower({
-                                user_uuid: user.user_uuid
+                                user_id: user.user_id
                             })
 
                             follower.save().then(() => {

@@ -85,8 +85,7 @@ const UserSchema: Schema = new Schema({
             maxlength: 12
         },
     },
-
-    user_uuid: {
+    user_id: {
         type: String,
         unique: true,
         default: `user.${uuid()}`,
@@ -128,7 +127,7 @@ const UserSchema: Schema = new Schema({
         }
     }],
     bookmarks: [{
-        article_uuid: {
+        article_id: {
             type: String,
             required: true
         },
@@ -139,7 +138,7 @@ const UserSchema: Schema = new Schema({
         }
     }],
     history: [{
-        article_uuid: {
+        article_id: {
             type: String,
             required: true
         },
@@ -155,7 +154,7 @@ UserSchema.methods.toJSON = function () {
     let user = this
     let userObject = user.toObject()
 
-    return _.pick(userObject, ["_id", "user_uuid", "email", "email_verified", "details"])
+    return _.pick(userObject, ["_id", "user_id", "email", "email_verified", "details"])
 }
 
 UserSchema.methods.generateAuthToken = function () {
@@ -163,7 +162,7 @@ UserSchema.methods.generateAuthToken = function () {
     let access = "auth"
     let token = uuid()
     // let token = jwt.sign({ _id: user._id.toHexString(), access }, process.env.JWT_SECRET!).toString()
-    let signed_token = jwt.sign({ _id: user._id.toHexString(), user_uuid: user.user_uuid, token: token, access }, process.env.JWT_SECRET!).toString()
+    let signed_token = jwt.sign({ _id: user._id.toHexString(), user_id: user.user_id, token: token, access }, process.env.JWT_SECRET!).toString()
 
     user.tokens.push({ access, token })
 

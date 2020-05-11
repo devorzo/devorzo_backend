@@ -14,13 +14,13 @@ const articleApiService = (app: express.Application) => {
         auth_middleware_wrapper_IS_LOGGED_IN,
         ArticleController.createArticle)
 
-    router.get("/api/:version/getArticlesByUserUuid",
+    router.get("/api/:version/getArticlesByUserId",
         auth_middleware_wrapper_IS_LOGGED_IN,
-        ArticleController.getArticlesByUserUuid)
+        ArticleController.getArticlesByUserId)
 
-    router.get("/api/:version/getArticleByUuid",
+    router.get("/api/:version/getArticleById",
         auth_middleware_wrapper_IS_LOGGED_IN,
-        ArticleController.getArticleByUuid)
+        ArticleController.getArticleById)
 
     // todo
     router.get("/api/:version/getArticleByTag",

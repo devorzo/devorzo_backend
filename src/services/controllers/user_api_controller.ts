@@ -17,11 +17,11 @@ export const userDetailsController = (req: Request, res: Response) => {
         let body = _.pick(req.body, ["id"])
         logger({ body }, Level.INFO)
         if (body.id == null || body.id == undefined) {
-            res.status(400).send(responseMessageCreator("Bad user uuid", 0))
+            res.status(400).send(responseMessageCreator("Invalid user id", 0))
         }
 
         User.findOne({
-            user_uuid: body.id
+            user_id: body.id
         }).then((doc) => {
             let d
             if (doc)
@@ -35,7 +35,7 @@ export const userDetailsController = (req: Request, res: Response) => {
     }
 }
 
-export const followUserUsingUuid = (req: Request, res: Response) => {
+export const followUserUsingId = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1") {
         let body = _.pick(req.body, ["follower_id", "user_token"])
@@ -43,12 +43,12 @@ export const followUserUsingUuid = (req: Request, res: Response) => {
         let decoded: any = null
         if (req.session) {
             if (req.session.logged == true) {
-                decoded = req.session.user_uuid
+                decoded = req.session.user_id
             }
         }
         if (decoded == null) {
             decoded = jwt.decode(body.user_token, { complete: true })
-            decoded = decoded.user_uuid
+            decoded = decoded.user_id
         }
 
         if (decoded == null) {
@@ -56,11 +56,11 @@ export const followUserUsingUuid = (req: Request, res: Response) => {
         }
 
         Followers.findOneAndUpdate({
-            user_uuid: decoded
+            user_id: decoded
         }, {
             $push: {
                 followers: {
-                    follower_uuid: body.follower_id,
+                    follower_id: body.follower_id,
                     followed_on: Date.now()
                 }
             }
@@ -77,7 +77,7 @@ export const followUserUsingUuid = (req: Request, res: Response) => {
 }
 
 
-export const unfollowUserUsingUuid = (req: Request, res: Response) => {
+export const unfollowUserUsingId = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1") {
         let body = _.pick(req.body, ["follower_id", "user_token"])
@@ -85,12 +85,12 @@ export const unfollowUserUsingUuid = (req: Request, res: Response) => {
         let decoded: any = null
         if (req.session) {
             if (req.session.logged == true) {
-                decoded = req.session.user_uuid
+                decoded = req.session.user_id
             }
         }
         if (decoded == null) {
             decoded = jwt.decode(body.user_token, { complete: true })
-            decoded = decoded.user_uuid
+            decoded = decoded.user_id
         }
 
         if (decoded == null) {
@@ -98,11 +98,11 @@ export const unfollowUserUsingUuid = (req: Request, res: Response) => {
         }
 
         Followers.findOneAndUpdate({
-            user_uuid: decoded
+            user_id: decoded
         }, {
             $pull: {
                 followers: {
-                    follower_uuid: body.follower_id
+                    follower_id: body.follower_id
                 }
             }
         }, function (err, doc) {
@@ -124,12 +124,12 @@ export const getAllUserFollowers = (req: Request, res: Response) => {
         let decoded: any = null
         if (req.session) {
             if (req.session.logged == true) {
-                decoded = req.session.user_uuid
+                decoded = req.session.user_id
             }
         }
         if (decoded == null) {
             decoded = jwt.decode(body.user_token, { complete: true })
-            decoded = decoded.user_uuid
+            decoded = decoded.user_id
         }
 
         if (decoded == null) {
@@ -137,7 +137,7 @@ export const getAllUserFollowers = (req: Request, res: Response) => {
         }
 
         Followers.findOne({
-            user_uuid: decoded
+            user_id: decoded
         }, function (err, doc) {
             if (!err) {
 
@@ -162,23 +162,23 @@ export const getAllPeopleUserFollows = (req: Request, res: Response) => {
         let decoded: any = null
         if (req.session) {
             if (req.session.logged == true) {
-                decoded = req.session.user_uuid
+                decoded = req.session.user_id
             }
         }
         if (decoded == null) {
             decoded = jwt.decode(body.user_token, { complete: true })
-            decoded = decoded.user_uuid
+            decoded = decoded.user_id
         }
 
         if (decoded == null) {
             res.status(400).send(responseMessageCreator("Invalid or empty token.", 0))
         }
 
-        let follower_uuid: string = decoded
+        let follower_id: string = decoded
         Followers.find({
             followers: {
                 $elemMatch: {
-                    follower_uuid
+                    follower_id
                 }
             }
         }, function (err, doc) {
@@ -206,12 +206,12 @@ export const doesUserFollowAnotherUser = (req: Request, res: Response) => {
         let decoded: any = null
         if (req.session) {
             if (req.session.logged == true) {
-                decoded = req.session.user_uuid
+                decoded = req.session.user_id
             }
         }
         if (decoded == null) {
             decoded = jwt.decode(body.user_token, { complete: true })
-            decoded = decoded.user_uuid
+            decoded = decoded.user_id
         }
 
         if (decoded == null) {
@@ -219,10 +219,10 @@ export const doesUserFollowAnotherUser = (req: Request, res: Response) => {
         }
 
         Followers.findOne({
-            user_uuid: decoded,
+            user_id: decoded,
             followers: {
                 $elemMatch: {
-                    follower_uuid: body.follower_id
+                    follower_id: body.follower_id
                 }
             }
         }, function (err, doc) {
@@ -247,12 +247,12 @@ export const deleteAccount = (req: Request, res: Response) => {
         let decoded: any = null
         if (req.session) {
             if (req.session.logged == true) {
-                decoded = req.session.user_uuid
+                decoded = req.session.user_id
             }
         }
         if (decoded == null) {
             decoded = jwt.decode(body.user_token, { complete: true })
-            decoded = decoded.user_uuid
+            decoded = decoded.user_id
         }
 
         if (decoded == null) {
@@ -262,7 +262,7 @@ export const deleteAccount = (req: Request, res: Response) => {
         if (body.confirm) {
             //todo: delete other schemas
             User.findOneAndDelete({
-                user_uuid: decoded
+                user_id: decoded
             }, function (err) {
                 if (!err) {
                     res.send(responseMessageCreator("User deleted."))
@@ -276,7 +276,7 @@ export const deleteAccount = (req: Request, res: Response) => {
     }
 }
 
-export const getUserArticlesUsingID = (req: Request, res: Response) => {
+export const getUserArticlesUsingId = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1") {
         let body = _.pick(req.body, ["user_id", "count", "token"])
@@ -288,7 +288,7 @@ export const getUserArticlesUsingID = (req: Request, res: Response) => {
         User.aggregate([
             {
                 $match: {
-                    user_uuid: body.user_id,
+                    user_id: body.user_id,
                     tokens: { token: body.token }
                 }
             },
@@ -325,7 +325,7 @@ export const updateUserSetting = (req: Request, res: Response) => {
                 data['account_initialised'] = 1
             }
             User.findOneAndUpdate({
-                user_uuid: req.user.user_uuid
+                user_id: req.user.user_id
             }, {
                 $set: {
                     ...data
@@ -350,8 +350,8 @@ export const updateUserSetting = (req: Request, res: Response) => {
 export default {
     userDetailsController,
 
-    followUserUsingUuid,
-    unfollowUserUsingUuid,
+    followUserUsingId,
+    unfollowUserUsingId,
     getAllUserFollowers,
     getAllPeopleUserFollows,
     doesUserFollowAnotherUser,
