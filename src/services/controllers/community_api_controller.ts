@@ -222,14 +222,14 @@ export const addUserToCommunity = (req: Request, res: Response) => {
             }
         }).then((community)=>{
             if (community){
-                // User.exists({user_uuid:user_id}).then((userExists)=>{
+                // User.exists({user_id:user_id}).then((userExists)=>{
                 //     if (userExists){
-                Community.find({"followers_list.user_uuid":user_id, "_id":community_id}).then((result)=>{
+                Community.find({"followers_list.user_id":user_id, "_id":community_id}).then((result)=>{
                     if (result.length){
                         res.status(400).send(responseMessageCreator("Already a follower to this community!", 0))
                     }
                     else{
-                        community.followers_list.push({user_uuid:user_id, followed_on:Date.now()})
+                        community.followers_list.push({user_id:user_id, followed_on:Date.now()})
                         community.save().then((result)=>{
                             res.status(200).send(responseMessageCreator("User Added Successfully", 1))
                         }).catch((err)=>{
