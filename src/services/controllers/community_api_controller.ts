@@ -15,6 +15,7 @@ import Article from "../../database/models/article"
 import { decodeBase64 } from "bcryptjs"
 import { Mongoose, Query, Types} from "mongoose"
 import Community from "../../database/models/communities"
+import User from "../../database/models/user"
 export const createCommunity = (req : Request, res: Response) => {
     let version = req.params.version
     if(version == "v1")
@@ -199,10 +200,57 @@ export const setCommunitySettings = (req: Request, res: Response) => {
     }
 }
 
-export const setCommunityTheme = (req: Request, res: Response) => {
+export const addUserToCommunity = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1"){
-        
+        if (!Object.prototype.hasOwnProperty.call(req.body, "community_id" )|| !Types.ObjectId.isValid(req.body.community_id)){
+            res.status(400).send(responseMessageCreator("Community id not provided or incorrect community id", 0))
+            return
+        }
+        if (!Object.prototype.hasOwnProperty.call(req.body, "user_id") || !Types.ObjectId.isValid(req.body.user_id)){
+            res.status(400).send(responseMessageCreator("User id not provided or incorrect User id", 0))
+            return
+        }
+        let community_id = req.body.community_id
+        let user_id = req.body.user_id
+        Community.findById(community_id).then((doc)=>{
+            if (doc){
+                return doc 
+            }          
+            else{
+                return null
+            }
+        }).then((community)=>{
+            if (community){
+                // User.exists({user_uuid:user_id}).then((userExists)=>{
+                //     if (userExists){
+                Community.find({"followers_list.user_uuid":user_id, "_id":community_id}).then((result)=>{
+                    if (result.length){
+                        res.status(400).send(responseMessageCreator("Already a follower to this community!", 0))
+                    }
+                    else{
+                        community.followers_list.push({user_uuid:user_id, followed_on:Date.now()})
+                        community.save().then((result)=>{
+                            res.status(200).send(responseMessageCreator("User Added Successfully", 1))
+                        }).catch((err)=>{
+                            res.status(500).send(responseMessageCreator("Internal Server Error!", 0))
+                            console.log(err)
+                        })
+                    }
+                })
+                // }
+                // else{
+                //     res.status(400).send(responseMessageCreator("No such User Exists", 0))
+                // }
+            // })
+            }
+            else{
+                res.status(400).send(responseMessageCreator("No Such community!", 0))
+            }
+        }).catch((err)=>{
+            res.status(500).send(responseMessageCreator("Internal Server Error", 0))
+            console.log(err)
+        })
     }   
     else{
         res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
@@ -210,9 +258,11 @@ export const setCommunityTheme = (req: Request, res: Response) => {
 }
 
 
+
 export default{
     createCommunity,
     deleteCommunity,
     setCommunityRules,
-    setCommunityAbout
+    setCommunityAbout,
+    addUserToCommunity
 }
