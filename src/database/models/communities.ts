@@ -27,7 +27,7 @@ const CommunitySchema: Schema = new Schema({
     },
 
     followers_list: [{
-        user_uuid: {
+        user_id: {
             type: String,
             required: true
         },
@@ -39,7 +39,7 @@ const CommunitySchema: Schema = new Schema({
     }],
 
     moderator_list: [{
-        user_uuid: {
+        user_id: {
             type: String,
             required: true
         },
@@ -51,7 +51,7 @@ const CommunitySchema: Schema = new Schema({
     }],
 
     banned_user:[{
-        user_uuid: {
+        user_id: {
             type: String,
             required: true,
             minlength:1

@@ -4,7 +4,7 @@ import { Schema, model } from "mongoose"
 import { IUserFollowDocument, IUserFollow, IUserFollowModel } from "../../interfaces/databaseInterfaces"
 
 const FollowerSchema: Schema = new Schema({
-    user_uuid: {
+    user_id: {
         type: String,
         required: true,
         minlength: 1,
@@ -12,7 +12,7 @@ const FollowerSchema: Schema = new Schema({
 
     },
     followers: [{
-        follower_uuid:{
+        follower_id:{
             type: String,
             required: true,
             minlength:1, 

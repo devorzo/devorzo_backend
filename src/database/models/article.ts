@@ -3,7 +3,7 @@ import { v4 } from "uuid"
 // eslint-disable-next-line no-unused-vars
 import { IArticleDocument, IArticle, IArticleModel } from "../../interfaces/databaseInterfaces"
 
-export enum BooleanFlag{
+export enum BooleanFlag {
     NO,
     YES,
     NOT_DECIDED = -1
@@ -22,25 +22,35 @@ const ArticleSchema: Schema = new Schema({
         trim: true
     },
 
-    preview:{
+    preview: {
         type: String,
         required: true
     },
 
+    edited: {
+        type: Number,
+        default: BooleanFlag.NO,
+        required: true
+    },
+    last_edited_on: {
+        type: Number,
+        default: BooleanFlag.NO,
+        required: true
+    },
     created_on: {
         type: Number,
         default: Date.now(),
         requried: true
     },
 
-    article_uuid: {
+    article_id: {
         type: String,
         required: true,
         default: `article.${v4()}`,
         minlength: 1,
         trim: true
     },
-    author_uuid: {
+    author_id: {
         type: String,
         required: true,
         minlength: 1,
@@ -53,37 +63,48 @@ const ArticleSchema: Schema = new Schema({
         required: true
     },
 
-    community_uuid: {
+    community_id: {
         type: String,
         required: true,
-        default: "NONE",
+        default: "NA",
         minlength: 1,
-        trim: true
+        trim: true,
     },
 
-    belongs_to_community:{
+    belongs_to_community: {
         type: Number,
         required: true,
         default: BooleanFlag.NO
     },
 
-    moderation_status:{
+    moderation_status: {
         type: Number,
-        default:BooleanFlag.NO,
+        default: BooleanFlag.NO,
         required: true
     },
 
-    duration_of_article:{
-        type:String,
+    duration_of_article: {
+        type: String,
         default: "-1",
     },
 
     likes: [{
-        user_uuid: {
+        user_id: {
             type: String,
             required: true
         },
-        liked_on:{
+        liked_on: {
+            type: Number,
+            default: Date.now(),
+            required: true
+        }
+    }],
+    tags: [{
+        tag: {
+            type: String,
+            required: true
+        },
+        added_on: {
             type: Number,
             default: Date.now(),
             required: true
@@ -95,7 +116,7 @@ const ArticleSchema: Schema = new Schema({
 
 // todo: pre save generate
 // - duration and preview
-    
+
 export const Article: IArticleModel = model<IArticle, IArticleModel>("Article", ArticleSchema)
 
 export default Article

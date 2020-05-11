@@ -85,8 +85,7 @@ const UserSchema: Schema = new Schema({
             maxlength: 12
         },
     },
-
-    user_uuid: {
+    user_id: {
         type: String,
         unique: true,
         default: `user.${uuid()}`,
@@ -128,7 +127,7 @@ const UserSchema: Schema = new Schema({
         }
     }],
     bookmarks: [{
-        article_uuid: {
+        article_id: {
             type: String,
             required: true
         },
@@ -139,7 +138,7 @@ const UserSchema: Schema = new Schema({
         }
     }],
     history: [{
-        article_uuid: {
+        article_id: {
             type: String,
             required: true
         },
@@ -155,7 +154,7 @@ UserSchema.methods.toJSON = function () {
     let user = this
     let userObject = user.toObject()
 
-    return _.pick(userObject, ["_id", "email"])
+    return _.pick(userObject, ["_id", "user_id", "email", "email_verified", "details"])
 }
 
 UserSchema.methods.generateAuthToken = function () {
@@ -163,7 +162,7 @@ UserSchema.methods.generateAuthToken = function () {
     let access = "auth"
     let token = uuid()
     // let token = jwt.sign({ _id: user._id.toHexString(), access }, process.env.JWT_SECRET!).toString()
-    let signed_token = jwt.sign({ _id: user._id.toHexString(), user_uuid: user.user_uuid, token: token, access }, process.env.JWT_SECRET!).toString()
+    let signed_token = jwt.sign({ _id: user._id.toHexString(), user_id: user.user_id, token: token, access }, process.env.JWT_SECRET!).toString()
 
     user.tokens.push({ access, token })
 
@@ -172,14 +171,63 @@ UserSchema.methods.generateAuthToken = function () {
     })
 }
 
+UserSchema.methods.generateVerifyToken = function () {
+    let user = this
+    let access = "verify"
+    let t1 = generateHexString(32)
+    let t2 = generateHexString(32)
+    let t3 = generateHexString(32)
+    let token = `${t1}.${t2}.${t3}`
+
+    user.tokens.push({ access, token })
+
+    return user.save().then(() => {
+        return { t1, t2, t3, token }
+    })
+}
+
+UserSchema.methods.generateResetToken = function () {
+    let user = this
+    let access = "reset"
+    let t1 = generateHexString(32)
+    let t2 = generateHexString(32)
+    let t3 = generateHexString(32)
+    let token = `${t1}.${t2}.${t3}`
+
+    user.tokens.push({ access, token })
+
+    return user.save().then(() => {
+        return { t1, t2, t3, token }
+    })
+}
+
+UserSchema.methods.removeAllVerificationToken = function () {
+    let user = this
+
+    return user.updateOne({
+        $pull: {
+            tokens: { access: "verify" }
+        }
+    })
+}
+
+UserSchema.methods.removeAllResetToken = function () {
+    let user = this
+
+    return user.updateOne({
+        $pull: {
+            tokens: { access: "reset" }
+        }
+    })
+}
+
 UserSchema.statics.removeAuthToken = function (token: any) {
     let user = this
 
     let decoded: any = jwt.decode(token, { complete: true })
 
-
     if (decoded) {
-        return user.update({
+        return user.updateOne({
             $pull: {
                 tokens: { token: decoded.token }
             }
@@ -187,22 +235,30 @@ UserSchema.statics.removeAuthToken = function (token: any) {
     }
 }
 
-
 UserSchema.statics.findByToken = function (token: any, access: string = "auth") {
     let User = this
     let decoded: any
+
     try {
-        decoded = jwt.verify(token, process.env.JWT_SECRET! as string)
+        if (access == "auth") {
+            decoded = jwt.verify(token, process.env.JWT_SECRET! as string)
+
+            return User.findOne({
+                "_id": decoded._id,
+                "tokens.token": decoded.token,
+                "tokens.access": access
+            })
+        } else {
+            console.log("checking verif token")
+            return User.findOne({
+                "tokens.token": token,
+                "tokens.access": access
+            })
+        }
     } catch (e) {
-        return Promise.reject()
+        console.log("ERROR", e)
+        return Promise.reject(e)
     }
-    // if (decoded && typeof decoded != undefined) {
-    return User.findOne({
-        "_id": decoded._id,
-        "tokens.token": decoded.token,
-        "tokens.access": access
-    })
-    // }
 }
 
 UserSchema.statics.findByCredentials = function (email: string, password: string) {
@@ -223,6 +279,19 @@ UserSchema.statics.findByCredentials = function (email: string, password: string
                 }
             })
         })
+    })
+}
+
+UserSchema.statics.isUsernameUnique = function (username: string) {
+    let User: IUserModel = this! as IUserModel
+    return User.findOne({
+        "details.username": username
+    }).then((user: any) => {
+        if (user) {
+            return false
+        } else {
+            return true
+        }
     })
 }
 

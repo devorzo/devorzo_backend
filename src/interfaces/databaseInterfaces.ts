@@ -14,7 +14,7 @@ export interface IUserDocument extends Document {
         gender: number;
     }
 
-    user_uuid: string;
+    user_id: string;
 
     account_created_on: number;
 
@@ -28,11 +28,11 @@ export interface IUserDocument extends Document {
         token: string;
     }[];
     bookmarks: {
-        article_uuid: string;
+        article_id: string;
         bookmarked_on: number;
     }[];
     history: {
-        atricle_uuid: string;
+        atricle_id: string;
         viewed_on: number;
     }[];
     //article relations
@@ -42,22 +42,28 @@ export interface IUser extends IUserDocument {
     // methods here! 
     toJSON(): { _id: Types.ObjectId, email: string }
     generateAuthToken(): any
+    generateVerifyToken(): any
+    generateResetToken(): any
+
+    removeAllVerificationToken(): any
+    removeAllResetToken(): any
 }
 
 export interface IUserModel extends Model<IUser> {
     // statics here
     removeAuthToken(token: any): any
     findByCredentials(email: string, password: string): any
+    isUsernameUnique(username: string): any
     accountExists(email: string): any
-    findByToken(token: any): any
+    findByToken(token: any, access: string): any
 }
 
 
 // User Follower Schema
 export interface IUserFollowDocument extends Document {
-    user_uuid: string;
+    user_id: string;
     followers: {
-        follower_uuid: string;
+        follower_id: string;
         followed_on: number;
     }[]
 }
@@ -76,14 +82,16 @@ export interface IArticleDocument extends Document {
     content: string;
     preview: string;
 
+    edited: number;
+    last_edited_on: number,
     created_on: number;
 
-    author_uuid: string;
-    article_uuid: string;
+    author_id: string;
+    article_id: string;
 
     views: number;
 
-    community_uuid: string;
+    community_id: string;
     belongs_to_community: number; //0|1
 
     moderation_status: number; //0|1
@@ -92,8 +100,12 @@ export interface IArticleDocument extends Document {
     duration_of_article: string;
 
     likes: {
-        user_uuid: string;
+        user_id: string;
         liked_on: number;
+    }[];
+    tags: {
+        tag: string,
+        added_on: number
     }[];
 }
 
@@ -116,22 +128,22 @@ export interface ICommunityDocument extends Document {
     created_on: number;
 
     article_list: {
-        article_uuid: string;
+        article_id: string;
         created_on: string;
     }[];
 
     followers_list: {
-        user_uuid: string;
+        user_id: string;
         followed_on: number;
     }[]
 
     moderator_list: {
-        user_uuid: string;
+        user_id: string;
         joined_on: number;
     }[]
 
     banned_user: {
-        user_uuid: string;
+        user_id: string;
         // temp ban: cant see comm
         // ban: see but cant post
         // permanent ban: cant see cant post infinity

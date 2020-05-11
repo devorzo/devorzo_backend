@@ -10,6 +10,8 @@ import GridFSStorage from "multer-gridfs-storage"
 import logger, { Level } from "../../lib/logger"
 // logger({ monogo: process.env.MONGODB_URI })
 
+import { auth_middleware_wrapper_IS_LOGGED_IN, checkIfUserIsAdmin} from "../middleware/auth_middleware"
+import { responseMessageCreator } from "../../lib/response_message_creator"
 let opts: GridFSStorage.UrlStorageOptions
 opts = {
     url: process.env.MONGODB_URI!,
@@ -43,13 +45,24 @@ const upload = multer({ storage })
 
 const fileService = (app: express.Application) => {
     const router = express.Router()
-    router.get("/file-service,", (req, res) => {
-        res.send({ status: 200 })
+    router.get("/api/:version/file-service,", (req, res) => {
+        let version = req.params.version;
+        if (version == "v1") {
+            res.send({ status: 200 })
+        } else {
+            res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+        }
+
     })
-    
-    router.post("/upload", upload.single("file"), function (req, res) {
-        logger({ file: req.file }, Level.DEBUG)
-        res.send({ success: 1, file: `http://localhost:5000/file/${req.file.filename}`,file_info: req.file })
+
+    router.post("/api/:version/upload", upload.single("file"), function (req, res) {
+        let version = req.params.version;
+        if (version == "v1") {
+            logger({ file: req.file }, Level.DEBUG)
+            res.send({ success: 1, file_name: req.file.filename, file_info: req.file })
+        } else {
+            res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+        }
     })
 
     router.get("/test-upload", (req, res) => {
@@ -76,20 +89,26 @@ const fileService = (app: express.Application) => {
         stream.pipe(res)
     })
 
-    router.get("/del/:id", (req, res) => {
-        const bucket = new GridFSBucket(storage.db)
-        bucket.delete(new ObjectID(req.params.id), err => {
-            if (err) {
-                if (err.message.startsWith("FileNotFound")) {
-                    res.status(404).send({ success: false, err: err.message })
-                
-                    return
-                }
-                return res.status(500).send(err)
-            }
+    router.get("/api/:version/del/:id", (req, res) => {
+        let version = req.params.version;
+        if (version == "v1") {
+            const bucket = new GridFSBucket(storage.db)
+            bucket.delete(new ObjectID(req.params.id), err => {
+                if (err) {
+                    if (err.message.startsWith("FileNotFound")) {
+                        res.status(404).send({ success: false, err: err.message })
 
-            res.status(204).send({ success: false, status: 204, message: "File deleted!" })
-        })
+                        return
+                    }
+                    return res.status(500).send(err)
+                }
+
+                res.status(204).send({ success: false, status: 204, message: "File deleted!" })
+            })
+        } else {
+            res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+        }
+
     })
 
 

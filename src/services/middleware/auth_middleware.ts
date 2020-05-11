@@ -16,19 +16,19 @@ export const auth_middleware = (req: Request, res: Response, next: NextFunction,
     let token: any
     if (req.header)
         token = req.header("x-auth")
-    // if (!token) {
-    //     token = req.query.xAuthToken
-    // }
+    if (!token) {
+        token = req.query.xAuthToken
+    }
     if (!token) {
         token = req.body.xAuthToken
     }
-    if (!token) {
-        if (req.session)
-            token = req.session.xAuth
-    }
+    // if (!token) {
+    //     if (req.session)
+    //         token = req.session.xAuth
+    // }
 
     if (token) {
-        User.findByToken(token).then((user: any) => {
+        User.findByToken(token, "auth").then((user: any) => {
             if (!user) {
                 return Promise.reject()
             }
@@ -77,5 +77,31 @@ export const auth_middleware = (req: Request, res: Response, next: NextFunction,
         }
     }
 }
+
+export const checkIfUserIsAdmin = (req: Request, res: Response, next: NextFunction) => {
+    if (req.user != null && req.token != null) {
+        if (req.user.details.account_type === 1) {
+            // check for account type in the condition above
+            next();
+        } else {
+            res.status(401).send({ success: false, error: { message: "INVALID AUTH" } })
+        }
+    } else {
+        res.status(401).send({ success: false, error: { message: "INVALID AUTH" } })
+    }
+}
+
+export const auth_middleware_wrapper_IS_LOGGED_IN = (req: Request, res: Response, next: NextFunction) => {
+    auth_middleware(req! as Request, res! as Response, next, Auth.IS_LOGGED_IN)
+}
+
+export const auth_middleware_wrapper_IS_LOGGED_OUT = (req: Request, res: Response, next: NextFunction) => {
+    auth_middleware(req! as Request, res! as Response, next, Auth.IS_LOGGED_OUT)
+}
+
+export const auth_middleware_wrapper_CHECK_AUTH = (req: Request, res: Response, next: NextFunction) => {
+    auth_middleware(req! as Request, res! as Response, next, Auth.CHECK_AUTH)
+}
+
 
 export default auth_middleware
