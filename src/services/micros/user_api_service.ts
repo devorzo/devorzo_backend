@@ -68,17 +68,17 @@ const userApiService = (app: express.Application) => {
     router.get("/api/:version/eraseCompleteHistory")
 
 
-    // alter schema
-    router.get("/api/:version/checkIfUsernameIsUnique")
-    router.get("/api/:version/checkIfEmailIsUnique")
-    router.get("/api/:version/changeUserAsNormie")
-    router.get("/api/:version/changeUserAsModerator")
-    router.get("/api/:version/changeUserAsAdmin")
+    // alter schema Instead make middleware
+    // router.get("/api/:version/checkIfUsernameIsUnique")
+    // router.get("/api/:version/checkIfEmailIsUnique")
+    // router.get("/api/:version/changeUserAsNormie")
+    // router.get("/api/:version/changeUserAsModerator")
+    // router.get("/api/:version/changeUserAsAdmin")
 
     // admin api
-    router.get("/api/:version/banUser")
-    router.get("/api/:version/banUserPermanently")
-    router.get("/api/:version/unbanUser")
+    // router.get("/api/:version/banUser")
+    // router.get("/api/:version/banUserPermanently")
+    // router.get("/api/:version/unbanUser")
 
 
     app.use(router)

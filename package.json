@@ -1,6 +1,6 @@
 {
   "name": "major_project",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "A site for learning machine learning.",
   "main": "dist/app.js",
   "scripts": {
