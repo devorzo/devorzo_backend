@@ -4,6 +4,7 @@ import { initEnv } from "./config/config"
 import express from "express"
 // import "ejs"
 import cors from "cors"
+import helmet from "helmet"
 // import path from "path"
 import bodyParser from "body-parser"
 
@@ -39,13 +40,34 @@ import notificationApiService from "./services/micros/notification_service"
 
 import logger, { Level } from "./lib/logger"
 import getServiceNames from "./lib/gather_service_names"
-
+import { responseMessageCreator } from "./lib/response_message_creator"
 
 
 logger({ argv }, Level.VERBOSE)
 
 let app = express()
-app.use(cors())
+
+let whitelist = require("../whitelist.json")
+var corsOptions: cors.CorsOptions = {
+    //@ts-ignore
+    origin: function (origin: string, callback: any) {
+        // console.log(whitelist.indexOf(origin), origin)
+        if (process.env.NODE_ENV == "development") {
+            if (!origin) return callback(null, true);
+        }
+
+        if (whitelist.indexOf(origin) !== -1) {
+            callback(null, true)
+        } else {
+            callback("Invalid Request")
+        }
+    }
+}
+
+app.use(helmet())
+app.use(cors(corsOptions))
+
+
 /*  Database handlers */
 // eslint-disable-next-line no-unused-vars
 let mongoose = initDb()
@@ -98,14 +120,28 @@ logger({ serviceNames }, Level.VERBOSE)
 app.set("port", (process.env.PORT || 5000))
 
 
+app.get("/", (req, res) => {
+    res.send({
+        version: process.env.VERSION
+    })
+})
+
+app.get("/load", (req, res) => {
+    let mem = process.memoryUsage();
+    res.send({
+        memory: {
+            rss: mem.rss / (1024 * 1024),
+            heapTotal: mem.heapTotal / (1024 * 1024),
+            heapUsed: mem.heapUsed / (1024 * 1024),
+            external: mem.external / (1024 * 1024)
+        }
+    })
+})
 
 // res.sendFile(path.join(__dirname + '/client/public/index.html'));
 
 app.get("*", (req, res) => {
-    // console.log("sent from *")
-    // res.sendFile(path.join(__dirname, "../") + "/build/index.html")
-    // res.sendFile(__dirname +".. /build/index.html")
-    res.send("404")
+    res.status(404).send(responseMessageCreator("Bad Request", 0))
 })
 
 app.listen(app.get("port"), process.env.IP!, function () {
