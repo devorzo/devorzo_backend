@@ -16,26 +16,22 @@ import { decodeBase64 } from "bcryptjs"
 import { Mongoose, Query, Types} from "mongoose"
 import Community from "../../database/models/communities"
 import User from "../../database/models/user"
+
 export const createCommunity = (req : Request, res: Response) => {
     let version = req.params.version
     if(version == "v1")
     {
-          if(!req.body.hasOwnProperty("rules"))
-          {
+        let body = _.pick(req.body,["rules","name","about"])
+          if(body.rules==null){
              res.send(responseMessageCreator({message : "Please enter the rules for your community!!"},0))
-          }
-          if(!req.body.hasOwnProperty("name"))
-          {
+          }else if(body.name == null){
              res.send(responseMessageCreator({message : "Please enter the name of your community!!"},0))
-          }
-          if(!req.body.hasOwnProperty("about"))
-          {
+          }else if(body.about == null){
              res.send(responseMessageCreator({message : "Please enter the description for your community!!"},0))
-          }
-          if(req.body.name > 150)
+          }else (req.body.name > 150)
           {
               res.send(responseMessageCreator({message : "The name is too long!!!"},0))
-          }
+        }
           let CommunityNew = {
             "name"  : req.body.name,
             "rules"  :req.body.rules,
@@ -55,6 +51,23 @@ export const createCommunity = (req : Request, res: Response) => {
         res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
     }
 
+}
+export const addUserToCommunity = (req : Request, res : Response) =>{
+    let version = req.params.version
+    if(version == "v1")
+    {
+       
+       if(Community.find({name : req.body.name}, function(err,docs){
+           if(docs.length == 0)
+           {
+               res.send(responseMessageCreator("Invalid Name of the community", 0))
+           }
+           
+        }
+    }
+    else{
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
 }
 
 export const deleteCommunity = (req : Request, res: Response) => {
@@ -195,49 +208,20 @@ export const setCommunitySettings = (req: Request, res: Response) => {
     }
 }
 
-export const addUserToCommunity = (req: Request, res: Response) => {
+export const setCommunityTheme = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1"){
-        let body = _.pick(req.body, ["community_id"])
-        let user_id = req.user.user_id
-        if (body.community_id == null || !Types.ObjectId.isValid(body.community_id)) {
-            res.status(400).send(responseMessageCreator("Invalid Community id", 0))
-        }
-        else{
-            Community.findById(body.community_id).then((doc: any)=>{
-                if (doc) {
-                    doc.findOne({"followers_list.user_id":user_id, "_id":body.community_id}).then((result: any)=>{
-                        if(result) {
-                            res.status(400).send(responseMessageCreator("Already a follower to this community!", 0))
-                        }
-                        else {
-                            doc.followers_list.push({user_id:user_id, followed_on:Date.now()})
-                            doc.save().then((result: any)=>{
-                                res.status(200).send(responseMessageCreator("User Added Successfully", 1))
-                            }).catch((err: any)=>{
-                                res.status(500).send(responseMessageCreator(err, 0))
-                                console.log(err)
-                            })    
-                        }
-                    })
-                }
-                else {
-                    res.status(400).send(responseMessageCreator("Invalid Community id", 0))
-                }
-            })
-        }
-    }
+        
+    }   
     else{
         res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
     }
 }
 
 
-
 export default{
     createCommunity,
     deleteCommunity,
     setCommunityRules,
-    setCommunityAbout,
-    addUserToCommunity
+    setCommunityAbout
 }
