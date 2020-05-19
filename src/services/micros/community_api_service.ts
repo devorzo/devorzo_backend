@@ -6,7 +6,7 @@ import express from "express"
 // let { registerController, loginController, logoutController } = require("../controllers/authUserController")
 // let { auth, auth_semi } = require("../middlewares/auth")
 import community_api_controller from "../../services/controllers/community_api_controller"
-
+import { auth_middleware_wrapper_IS_LOGGED_IN } from "../middleware/auth_middleware"
 import community from "src/database/models/communities"
 
 const communityApiService = (app: express.Application) => {
@@ -18,13 +18,13 @@ const communityApiService = (app: express.Application) => {
 
     // router.get("/api/:version/")
     router.post("/api/:version/createCommunity", community_api_controller.createCommunity)
-    router.delete("/api/:version/deleteCommunity", community_api_controller.deleteCommunity)
-    router.post("/api/:version/addUserToCommunity", community_api_controller.addUserToCommunity)
+    router.delete("/api/:version/deleteCommunity", auth_middleware_wrapper_IS_LOGGED_IN, community_api_controller.deleteCommunity)
+    router.post("/api/:version/addUserToCommunity", auth_middleware_wrapper_IS_LOGGED_IN, community_api_controller.addUserToCommunity)
     router.get("/api/:version/removeUserFromCommunity")
 
     router.post("/api/:version/modifyCommunityDetails")
-    router.post("/api/:version/setCommunityRules", community_api_controller.setCommunityRules)
-    router.post("/api/:version/setCommunityAbout", community_api_controller.setCommunityAbout)
+    router.post("/api/:version/setCommunityRules", auth_middleware_wrapper_IS_LOGGED_IN, community_api_controller.setCommunityRules)
+    router.post("/api/:version/setCommunityAbout", auth_middleware_wrapper_IS_LOGGED_IN, community_api_controller.setCommunityAbout)
     router.post("/api/:version/setCommunitySettings")
     router.post("/api/:version/setCommunityTheme")
 
