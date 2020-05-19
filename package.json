@@ -1,7 +1,7 @@
 {
-  "name": "major_project",
+  "name": "lattice_project",
   "version": "0.1.0",
-  "description": "A site for learning machine learning.",
+  "description": "A site for machine learning enthusiasts.",
   "main": "dist/app.js",
   "scripts": {
     "start": "node dist/app.js --service=all --env=production",

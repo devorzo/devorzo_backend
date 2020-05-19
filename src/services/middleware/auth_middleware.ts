@@ -91,6 +91,20 @@ export const checkIfUserIsAdmin = (req: Request, res: Response, next: NextFuncti
     }
 }
 
+export const checkIfUserIsAdminOrModerator = (req: Request, res: Response, next: NextFunction) => {
+    if (req.user != null && req.token != null) {
+        if (req.user.details.account_type === 1) {
+            // check for account type in the condition above
+            next();
+        } else if (req.body.community_id != null) {
+            //check for moderator in community with the user id
+        } else {
+            res.status(401).send({ success: false, error: { message: "INVALID AUTH" } })
+        }
+    } else {
+        res.status(401).send({ success: false, error: { message: "INVALID AUTH" } })
+    }
+}
 export const auth_middleware_wrapper_IS_LOGGED_IN = (req: Request, res: Response, next: NextFunction) => {
     auth_middleware(req! as Request, res! as Response, next, Auth.IS_LOGGED_IN)
 }

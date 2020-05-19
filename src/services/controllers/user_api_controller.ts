@@ -1,10 +1,11 @@
 import _ from "lodash"
 import User from "../../database/models/user"
+import Article from "../../database/models/article"
 import Followers from "../../database/models/follower"
 import jwt from "jsonwebtoken"
 
 // eslint-disable-next-line no-unused-vars
-import { Request, Response } from "express"
+import e, { Request, Response } from "express"
 import logger, { Level } from "../../lib/logger"
 import { responseMessageCreator } from "../../lib/response_message_creator"
 
@@ -347,6 +348,297 @@ export const updateUserSetting = (req: Request, res: Response) => {
     }
 }
 
+export const addToBookmark = (req: Request, res: Response) => {
+    let version = req.params.version;
+    if (version == "v1") {
+        let body = _.pick(req.body, ["article_id"])
+
+        if (body.article_id == null) {
+            res.status(400).send(responseMessageCreator("Invalid article id", 0))
+        } else {
+            Article.exists({
+                article_id: body.article_id
+            }).then((status) => {
+                if (status) {
+                    User.exists({
+                        user_id: req.user.user_id,
+                        "bookmarks.article_id": body.article_id
+                    }).then((doc) => {
+                        if (doc) {
+                            res.send(responseMessageCreator("The article is already bookmarked", 0))
+                        } else {
+                            User.findOneAndUpdate({
+                                user_id: req.user.user_id
+                            }, {
+                                $push: {
+                                    bookmarks: {
+                                        article_id: body.article_id,
+                                        bookmarked_on: Date.now()
+                                    }
+                                }
+                            }).then((doc2) => {
+                                if (doc2) {
+                                    res.send(responseMessageCreator("The article has been successfully bookmarked"))
+                                } else {
+                                    res.send(responseMessageCreator("Some error occured", 0))
+                                }
+                            })
+                        }
+                    })
+
+                } else {
+                    res.status(400).send(responseMessageCreator("Invalid article id", 0))
+                }
+            })
+        }
+    } else {
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+
+export const getAllUserBookmarks = (req: Request, res: Response) => {
+    let version = req.params.version;
+
+    console.log({ query: req.query, body: req.body })
+    if (version == "v1") {
+        User.findOne({
+            user_id: req.user.user_id
+        }).then((doc) => {
+            if (doc) {
+                let d = doc?.bookmarks.map((i) => {
+                    return {
+                        article_id: i.article_id,
+                        bookmarked_on: i.bookmarked_on
+                    }
+                })
+                res.send(responseMessageCreator({ data: d }))
+            } else
+                res.send(responseMessageCreator("Some error occured", 0))
+        })
+    } else {
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+
+export const removeArticleFromBookmark = (req: Request, res: Response) => {
+    let version = req.params.version;
+    if (version == "v1") {
+        let body = _.pick(req.body, ["article_id"])
+
+        if (body.article_id == null) {
+            res.status(400).send(responseMessageCreator("Invalid article id", 0))
+        } else {
+            Article.exists({
+                article_id: body.article_id
+            }).then((status) => {
+                if (status) {
+                    User.exists({
+                        user_id: req.user.user_id,
+                        "bookmarks.article_id": body.article_id
+                    }).then((doc) => {
+                        if (!doc) {
+                            res.send(responseMessageCreator("Article is not bookmarked", 0))
+                        } else {
+                            User.findOneAndUpdate({
+                                user_id: req.user.user_id
+                            }, {
+                                $pull: {
+                                    bookmarks: {
+                                        article_id: body.article_id,
+                                    }
+                                }
+                            }).then((doc2) => {
+                                if (doc2) {
+                                    res.send(responseMessageCreator("The article has been successfully removed from bookmark"))
+                                } else {
+                                    res.send(responseMessageCreator("Some error occured", 0))
+                                }
+                            })
+                        }
+                    })
+
+                } else {
+                    res.status(400).send(responseMessageCreator("Invalid article id", 0))
+                }
+            })
+        }
+    } else {
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+
+export const removeAllUserBookmarks = (req: Request, res: Response) => {
+    let version = req.params.version;
+    if (version == "v1") {
+        User.exists({
+            user_id: req.user.user_id,
+        }).then((doc) => {
+            if (!doc) {
+                res.status(400).send(responseMessageCreator("Some error occured", 0))
+            } else {
+                User.findOneAndUpdate({
+                    user_id: req.user.user_id
+                }, {
+                    bookmarks: []
+                }).then((doc2) => {
+                    if (doc2) {
+                        res.send(responseMessageCreator("Bookmarks have been successfully removed"))
+                    } else {
+                        res.send(responseMessageCreator("Some error occured", 0))
+                    }
+                })
+            }
+        })
+    } else {
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+
+export const addToHistory = (req: Request, res: Response) => {
+    let version = req.params.version;
+    if (version == "v1") {
+        let body = _.pick(req.body, ["article_id"])
+
+        if (body.article_id == null) {
+            res.status(400).send(responseMessageCreator("Invalid article id", 0))
+        } else {
+            Article.exists({
+                article_id: body.article_id
+            }).then((status) => {
+                if (status) {
+                    User.exists({
+                        user_id: req.user.user_id,
+                    }).then((doc) => {
+                        if (!doc) {
+                            res.send(responseMessageCreator("Some error orrcured", 0))
+                        } else {
+                            User.findOneAndUpdate({
+                                user_id: req.user.user_id
+                            }, {
+                                $push: {
+                                    history: {
+                                        article_id: body.article_id,
+                                        visited_on: Date.now()
+                                    }
+                                }
+                            }).then((doc2) => {
+                                if (doc2) {
+                                    res.send(responseMessageCreator("The article has been successfully added to history"))
+                                } else {
+                                    res.send(responseMessageCreator("Some error occured", 0))
+                                }
+                            })
+                        }
+                    })
+
+                } else {
+                    res.status(400).send(responseMessageCreator("Invalid article id", 0))
+                }
+            })
+        }
+    } else {
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+
+export const getCompleteHistory = (req: Request, res: Response) => {
+    let version = req.params.version;
+
+    console.log({ query: req.query, body: req.body })
+    if (version == "v1") {
+        User.findOne({
+            user_id: req.user.user_id
+        }).then((doc) => {
+            if (doc) {
+                let d = doc?.history.map((i) => {
+                    return {
+                        article_id: i.atricle_id,
+                        viewed_on: i.viewed_on
+                    }
+                })
+                res.send(responseMessageCreator({ data: d }))
+            } else
+                res.send(responseMessageCreator("Some error occured", 0))
+        })
+    } else {
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+
+export const removeArticleFromHistory = (req: Request, res: Response) => {
+    let version = req.params.version;
+    if (version == "v1") {
+        let body = _.pick(req.body, ["article_id"])
+
+        if (body.article_id == null) {
+            res.status(400).send(responseMessageCreator("Invalid article id", 0))
+        } else {
+            Article.exists({
+                article_id: body.article_id
+            }).then((status) => {
+                if (status) {
+                    User.exists({
+                        user_id: req.user.user_id,
+                        "history.article_id": body.article_id
+                    }).then((doc) => {
+                        if (!doc) {
+                            res.send(responseMessageCreator("Article is not in history", 0))
+                        } else {
+                            User.findOneAndUpdate({
+                                user_id: req.user.user_id
+                            }, {
+                                $pull: {
+                                    history: {
+                                        article_id: body.article_id,
+                                    }
+                                }
+                            }).then((doc2) => {
+                                if (doc2) {
+                                    res.send(responseMessageCreator("The article has been successfully removed from history"))
+                                } else {
+                                    res.send(responseMessageCreator("Some error occured", 0))
+                                }
+                            })
+                        }
+                    })
+
+                } else {
+                    res.status(400).send(responseMessageCreator("Invalid article id", 0))
+                }
+            })
+        }
+    } else {
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+
+export const removeCompleteHistory = (req: Request, res: Response) => {
+    let version = req.params.version;
+    if (version == "v1") {
+        User.exists({
+            user_id: req.user.user_id,
+        }).then((doc) => {
+            if (!doc) {
+                res.status(400).send(responseMessageCreator("Some error occured", 0))
+            } else {
+                User.findOneAndUpdate({
+                    user_id: req.user.user_id
+                }, {
+                    history: []
+                }).then((doc2) => {
+                    if (doc2) {
+                        res.send(responseMessageCreator("Bookmarks have been successfully removed"))
+                    } else {
+                        res.send(responseMessageCreator("Some error occured", 0))
+                    }
+                })
+            }
+        })
+    } else {
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+
 export default {
     userDetailsController,
 
@@ -358,7 +650,17 @@ export default {
 
     deleteAccount,
 
-    updateUserSetting
+    updateUserSetting,
+
+    addToBookmark,
+    getAllUserBookmarks,
+    removeAllUserBookmarks,
+    removeArticleFromBookmark,
+
+    addToHistory,
+    getCompleteHistory,
+    removeArticleFromHistory,
+    removeCompleteHistory
 }
 
 // export const s = (req: Request, res: Response) => {

@@ -10,7 +10,7 @@ import GridFSStorage from "multer-gridfs-storage"
 import logger, { Level } from "../../lib/logger"
 // logger({ monogo: process.env.MONGODB_URI })
 
-import { auth_middleware_wrapper_IS_LOGGED_IN, checkIfUserIsAdmin} from "../middleware/auth_middleware"
+import { auth_middleware_wrapper_IS_LOGGED_IN, checkIfUserIsAdmin } from "../middleware/auth_middleware"
 import { responseMessageCreator } from "../../lib/response_message_creator"
 let opts: GridFSStorage.UrlStorageOptions
 opts = {
@@ -59,7 +59,7 @@ const fileService = (app: express.Application) => {
         let version = req.params.version;
         if (version == "v1") {
             logger({ file: req.file }, Level.DEBUG)
-            res.send({ success: 1, file_name: req.file.filename, file_info: req.file })
+            res.send({ success: true, file_name: req.file.filename, file_info: req.file })
         } else {
             res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
         }
@@ -89,29 +89,52 @@ const fileService = (app: express.Application) => {
         stream.pipe(res)
     })
 
-    router.get("/api/:version/del/:id", (req, res) => {
-        let version = req.params.version;
-        if (version == "v1") {
-            const bucket = new GridFSBucket(storage.db)
-            bucket.delete(new ObjectID(req.params.id), err => {
-                if (err) {
-                    if (err.message.startsWith("FileNotFound")) {
-                        res.status(404).send({ success: false, err: err.message })
+    router.delete("/api/:version/del/:id",
+        auth_middleware_wrapper_IS_LOGGED_IN,
+        checkIfUserIsAdmin,
+        (req, res) => {
+            let version = req.params.version;
+            if (version == "v1") {
+                const bucket = new GridFSBucket(storage.db)
+                bucket.delete(new ObjectID(req.params.id), err => {
+                    if (err) {
+                        if (err.message.startsWith("FileNotFound")) {
+                            res.status(404).send({ success: false, err: err.message })
+
+                            return
+                        }
+                        res.status(500).send(err)
 
                         return
                     }
-                    return res.status(500).send(err)
-                }
 
-                res.status(204).send({ success: false, status: 204, message: "File deleted!" })
-            })
-        } else {
-            res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
-        }
+                    res.status(200).send({ success: true, message: "File deleted!" })
+                })
+            } else {
+                res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+            }
 
-    })
+        })
 
-
+    router.get("/api/:version/getAllFiles",
+        auth_middleware_wrapper_IS_LOGGED_IN,
+        checkIfUserIsAdmin,
+        (req, res) => {
+            let version = req.params.version;
+            if (version == "v1") {
+                const bucket = new GridFSBucket(storage.db)
+                let files = bucket.find({})
+                let data: any = []
+                files.forEach((file) => {
+                    console.log(file)
+                    data.push(file)
+                }).then(() => {
+                    res.send({ success: true, data })
+                })
+            } else {
+                res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+            }
+        })
 
     app.use(router)
 }

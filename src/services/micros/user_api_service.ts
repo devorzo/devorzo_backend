@@ -55,17 +55,34 @@ const userApiService = (app: express.Application) => {
     // router.get("/deleteUserAccountUsingUid")
 
     // todo: bookmark features
-    router.get("/api/:version/getAllUserBookmarks")
-    router.get("/api/:version/removeFromBookmark")
-    router.get("/api/:version/removeAllBookMarks")
+    router.post("/api/:version/addToBookmarks",
+        auth_middleware_wrapper_IS_LOGGED_IN,
+        userController.addToBookmark)
+    router.post("/api/:version/getAllUserBookmarks",
+        auth_middleware_wrapper_IS_LOGGED_IN,
+        userController.getAllUserBookmarks)
+    router.delete("/api/:version/removeArticleFromBookmark",
+        auth_middleware_wrapper_IS_LOGGED_IN,
+        userController.removeArticleFromBookmark)
+    router.delete("/api/:version/removeAllBookMarks",
+        auth_middleware_wrapper_IS_LOGGED_IN,
+        userController.removeAllUserBookmarks)
 
     // todo: history features
-    router.get("/api/:version/AddArticleToHistory")
-    router.get("/api/:version/getCompleteHistory")
-    router.get("/api/:version/getHistoryBetweenPeriod/:from/:to")
-    router.get("/api/:version/eraseFromHistory")
-    router.get("/api/:version/eraseHistoryBetweenPeriod/:from/:to")
-    router.get("/api/:version/eraseCompleteHistory")
+    router.post("/api/:version/AddArticleToHistory",
+        auth_middleware_wrapper_IS_LOGGED_IN,
+        userController.addToHistory)
+    router.post("/api/:version/getCompleteHistory",
+        auth_middleware_wrapper_IS_LOGGED_IN,
+        userController.getCompleteHistory)
+    router.delete("/api/:version/removeArticleFromHistory",
+        auth_middleware_wrapper_IS_LOGGED_IN,
+        userController.removeArticleFromHistory)
+    router.delete("/api/:version/removeCompleteHistory",
+        auth_middleware_wrapper_IS_LOGGED_IN,
+        userController.removeCompleteHistory)
+    // router.post("/api/:version/getHistoryBetweenPeriod/:from/:to")
+    // router.delete("/api/:version/eraseHistoryBetweenPeriod/:from/:to")
 
 
     // alter schema Instead make middleware

@@ -76,9 +76,13 @@ const MongoDBStore = connectMongoDBSession(session)
 
 /* body parser */
 app.use(bodyParser.urlencoded({
+    limit: '50mb',
+    parameterLimit: 100000,
     extended: true
 }))
-app.use(bodyParser.json())
+app.use(bodyParser.json({
+    limit: '50mb'
+}))
 
 /* Session */
 app.use(session({

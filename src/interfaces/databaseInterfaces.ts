@@ -164,3 +164,19 @@ export interface ICommunityModel extends Model<ICommunity> {
     //methods
 }
 
+// Invite code schema
+export interface IUserInviteDocument extends Document {
+    email: string,
+    invite_code: string,
+    invited_on: number,
+    status:number,
+}
+
+export interface IUserInvite extends IUserInviteDocument {
+    //statics here
+}
+
+export interface IUserInviteModel extends Model<IUserInvite> {
+    // methods here
+}
+
