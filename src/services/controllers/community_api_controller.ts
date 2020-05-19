@@ -13,96 +13,94 @@ import logger, { Level } from "../../lib/logger"
 import { responseMessageCreator } from "../../lib/response_message_creator"
 import Article from "../../database/models/article"
 import { decodeBase64 } from "bcryptjs"
-import { Mongoose, Query, Types} from "mongoose"
+import { Mongoose, Query, Types } from "mongoose"
 import Community from "../../database/models/communities"
 import User from "../../database/models/user"
 
-export const createCommunity = (req : Request, res: Response) => {
+export const createCommunity = (req: Request, res: Response) => {
     let version = req.params.version
-    if(version == "v1")
-    {
-        let body = _.pick(req.body,["rules","name","about"])
-          if(body.rules==null){
-             res.send(responseMessageCreator({message : "Please enter the rules for your community!!"},0))
-          }else if(body.name == null){
-             res.send(responseMessageCreator({message : "Please enter the name of your community!!"},0))
-          }else if(body.about == null){
-             res.send(responseMessageCreator({message : "Please enter the description for your community!!"},0))
-          }else (req.body.name > 150)
-          {
-              res.send(responseMessageCreator({message : "The name is too long!!!"},0))
+    if (version == "v1") {
+        let body = _.pick(req.body, ["rules", "name", "about"])
+        if (body.rules == null) {
+            res.send(responseMessageCreator({ message: "Please enter the rules for your community!!" }, 0))
+        } else if (body.name == null) {
+            res.send(responseMessageCreator({ message: "Please enter the name of your community!!" }, 0))
+        } else if (body.about == null) {
+            res.send(responseMessageCreator({ message: "Please enter the description for your community!!" }, 0))
+        } else (req.body.name > 150)
+        {
+            res.send(responseMessageCreator({ message: "The name is too long!!!" }, 0))
         }
-          let CommunityNew = {
-            "name"  : req.body.name,
-            "rules"  :req.body.rules,
-            "about" : req.body.about,
-            
+        let CommunityNew = {
+            "name": req.body.name,
+            "rules": req.body.rules,
+            "about": req.body.about,
+
         }
         let NewCommunityInstance = new Community(CommunityNew)
         console.log(NewCommunityInstance)
-        NewCommunityInstance.save(function(err,doc){
-            if(err) console.log(err)
+        NewCommunityInstance.save(function (err, doc) {
+            if (err) console.log(err)
             console.log("Community saved in database successfully")
 
         })
-        res.send(responseMessageCreator({message: "Hey, your community is created!!!!!"},1))
+        res.send(responseMessageCreator({ message: "Hey, your community is created!!!!!" }, 1))
     }
-    else{
+    else {
         res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
     }
 
 }
-export const addUserToCommunity = (req : Request, res : Response) =>{
+export const addUserToCommunity = (req: Request, res: Response) => {
     let version = req.params.version
-    if(version == "v1")
-    {
-       
-       if(Community.find({name : req.body.name}, function(err,docs){
-           if(docs.length == 0)
-           {
-               res.send(responseMessageCreator("Invalid Name of the community", 0))
-           }
-           
-        }
+    if (version == "v1") {
+
+        //    if(Community.find({name : req.body.name}, function(err,docs){
+        //        if(docs.length == 0)
+        //        {
+        //            res.send(responseMessageCreator("Invalid Name of the community", 0))
+        //        }
+
+        //     }
     }
-    else{
+    else {
         res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
     }
 }
 
-export const deleteCommunity = (req : Request, res: Response) => {
+export const deleteCommunity = (req: Request, res: Response) => {
     let version = req.params.version
-    if(version == "v1"){
-        if (!Object.prototype.hasOwnProperty.call(req.body, "id")){
-            res.status(400).send(responseMessageCreator({message:"Please provide the id of the community to be deleted"}, 0))
+    if (version == "v1") {
+        if (!Object.prototype.hasOwnProperty.call(req.body, "id")) {
+            res.status(400).send(responseMessageCreator({ message: "Please provide the id of the community to be deleted" }, 0))
             return
-        }                  
+        }
         let id = req.body.id
-        if (!Types.ObjectId.isValid(id)){
+        if (!Types.ObjectId.isValid(id)) {
             res.status(400).send(responseMessageCreator("Argument passed in must be a single String of 12 bytes or a string of 24 hex characters", 0))
             return
         }
-        Community.exists({_id:id}).then((result) => {
+        Community.exists({ _id: id }).then((result) => {
             if (result) {
-                Community.deleteMany({_id:id}, (err) => {
+                Community.deleteMany({ _id: id }, (err) => {
                     if (err) {
                         console.log(err)
-                        res.status(500).send(responseMessageCreator("Internal Server Error!", 0))                      
+                        res.status(500).send(responseMessageCreator("Internal Server Error!", 0))
                     }
                     else {
                         res.status(200).send(responseMessageCreator("Community deleted Sucessfully!", 1))
-                    }            
+                    }
                 })
             }
             else {
                 res.status(404).send(responseMessageCreator("No Such Community!", 0))
             }
-        }).catch((err)=>{
+        }).catch((err) => {
             console.log(err)
             res.status(500).send(responseMessageCreator("Internal Server Error!", 0))
         })
     }
-    else{
+    else {
         res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
     }
 
@@ -110,17 +108,17 @@ export const deleteCommunity = (req : Request, res: Response) => {
 
 export const modifyCommunityDetails = (req: Request, res: Response) => {
     let version = req.params.version
-    if (version == "v1"){
+    if (version == "v1") {
 
-    }   
-    else{
+    }
+    else {
         res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
     }
 }
 
 export const setCommunityRules = (req: Request, res: Response) => {
     let version = req.params.version
-    if (version == "v1"){
+    if (version == "v1") {
         let body = _.pick(req.body, ["rules", "community_id"])
         if (body.rules == null || body.rules.length <= 4) {
             res.status(400).send(responseMessageCreator("Invalid Rules!", 0))
@@ -129,38 +127,40 @@ export const setCommunityRules = (req: Request, res: Response) => {
             res.status(400).send(responseMessageCreator("Invalid Community Id", 0))
         }
         else {
-            Community.exists({_id:body.community_id}).then((doc: any)=>{
-                if (doc){
+            Community.exists({ _id: body.community_id }).then((doc: any) => {
+                if (doc) {
                     Community.findOneAndUpdate({
-                        _id: body.community_id},{rules: body.rules
+                        _id: body.community_id
+                    }, {
+                        rules: body.rules
                     }).then((result: any) => {
-                        if (result){
-                            res.status(200).send(responseMessageCreator({data:result}))
+                        if (result) {
+                            res.status(200).send(responseMessageCreator({ data: result }))
                         }
                         else {
                             res.status(400).send(responseMessageCreator("No Community Found!", 0))
                         }
-                    }).catch((err)=>{
+                    }).catch((err) => {
                         res.status(400).send(responseMessageCreator(err, 0))
                         console.log(err)
                     })
                 }
-                else{
+                else {
                     res.status(404).send(responseMessageCreator("No Such Community!", 0))
                 }
-            }).catch((err)=>{
+            }).catch((err) => {
                 res.status(400).send(responseMessageCreator(err, 0))
                 console.log(err)
             })
         }
-    }   
-    else{
+    }
+    else {
         res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
     }
 }
 export const setCommunityAbout = (req: Request, res: Response) => {
     let version = req.params.version
-    if (version == "v1"){
+    if (version == "v1") {
         let body = _.pick(req.body, ["about", "community_id"])
         if (body.about == null || body.about.length <= 4) {
             res.status(400).send(responseMessageCreator("Invalid About!", 0))
@@ -169,59 +169,63 @@ export const setCommunityAbout = (req: Request, res: Response) => {
             res.status(400).send(responseMessageCreator("Invalid Community Id", 0))
         }
         else {
-            Community.exists({_id:body.community_id}).then((doc: any)=>{
-                if (doc){
+            Community.exists({ _id: body.community_id }).then((doc: any) => {
+                if (doc) {
                     Community.findOneAndUpdate({
-                        _id: body.community_id},{about: body.about
+                        _id: body.community_id
+                    }, {
+                        about: body.about
                     }).then((result: any) => {
-                        if (result){
-                            res.status(200).send(responseMessageCreator({data:result}))
+                        if (result) {
+                            res.status(200).send(responseMessageCreator({ data: result }))
                         }
                         else {
                             res.status(400).send(responseMessageCreator("No Community Found!", 0))
                         }
-                    }).catch((err)=>{
+                    }).catch((err) => {
                         res.status(400).send(responseMessageCreator(err, 0))
                         console.log(err)
                     })
                 }
-                else{
+                else {
                     res.status(404).send(responseMessageCreator("No Such Community!", 0))
                 }
-            }).catch((err)=>{
+            }).catch((err) => {
                 res.status(400).send(responseMessageCreator(err, 0))
                 console.log(err)
             })
         }
-    }   
-    else{
+    }
+    else {
         res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
     }
 }
 export const setCommunitySettings = (req: Request, res: Response) => {
     let version = req.params.version
-    if (version == "v1"){
-        
-    }   
-    else{
+    if (version == "v1") {
+
+    }
+    else {
         res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
     }
 }
 
 export const setCommunityTheme = (req: Request, res: Response) => {
     let version = req.params.version
-    if (version == "v1"){
-        
-    }   
-    else{
+    if (version == "v1") {
+
+    }
+    else {
         res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
     }
 }
 
 
-export default{
+export default {
     createCommunity,
     deleteCommunity,
+
+    addUserToCommunity,
     setCommunityRules,
     setCommunityAbout
 }
