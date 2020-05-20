@@ -1,268 +1,478 @@
 import _ from "lodash"
-// import User from "../../database/models/user"
-// import Followers from "../../database/models/follower"
-// import jwt from "jsonwebtoken"
-//import "../../database/models/article"
 import "../../database/models/communities"
 import "../../database/models/user"
-import express from "express"
 
 // eslint-disable-next-line no-unused-vars
 import { Request, Response } from "express"
 import logger, { Level } from "../../lib/logger"
 import { responseMessageCreator } from "../../lib/response_message_creator"
-import Article from "../../database/models/article"
-import { decodeBase64 } from "bcryptjs"
-import { Mongoose, Query, Types} from "mongoose"
-import Community from "../../database/models/communities"
+import Community, { Role, CommunityMode } from "../../database/models/communities"
 import User from "../../database/models/user"
-export const createCommunity = (req : Request, res: Response) => {
-    let version = req.params.version
-    if(version == "v1")
-    {
-          if(!req.body.hasOwnProperty("rules"))
-          {
-             res.send(responseMessageCreator({message : "Please enter the rules for your community!!"},0))
-          }
-          if(!req.body.hasOwnProperty("name"))
-          {
-             res.send(responseMessageCreator({message : "Please enter the name of your community!!"},0))
-          }
-          if(!req.body.hasOwnProperty("about"))
-          {
-             res.send(responseMessageCreator({message : "Please enter the description for your community!!"},0))
-          }
-          if(req.body.name > 150)
-          {
-              res.send(responseMessageCreator({message : "The name is too long!!!"},0))
-          }
-          let CommunityNew = {
-            "name"  : req.body.name,
-            "rules"  :req.body.rules,
-            "about" : req.body.about,
-            
-        }
-        let NewCommunityInstance = new Community(CommunityNew)
-        console.log(NewCommunityInstance)
-        NewCommunityInstance.save(function(err,doc){
-            if(err) console.log(err)
-            console.log("Community saved in database successfully")
+import { v4 } from "uuid"
+import { validateEmail } from "../../lib/validate_email"
 
-        })
-        res.send(responseMessageCreator({message: "Hey, your community is created!!!!!"},1))
+
+export const createCommunity = (req: Request, res: Response) => {
+    let version = req.params.version
+    if (version == "v1") {
+        let body = _.pick(req.body, ["rules", "name", "about", "community_mode"])
+        if (body.rules == null) {
+            res.send(responseMessageCreator("Please provide valid rules for community", 0))
+        } else if (body.name == null) {
+            res.send(responseMessageCreator("Please provide a valid name for your community", 0))
+        } else if (body.about == null) {
+            res.send(responseMessageCreator("Please provide a valid description for your community", 0))
+        } else if (req.body.name > 150) {
+            res.send(responseMessageCreator("Please provide a valid name for your community", 0))
+        } else {
+            let ts = Date.now()
+            let communityObject = {
+                name: req.body.name,
+                rules: req.body.rules,
+                about: req.body.about,
+                community_id: `community.${v4()}`,
+                created_on: ts,
+                community_mode: (body.community_mode == null) ? 0 : body.community_mode,
+                users_list: [{
+                    user_id: req.user.user_id,
+                    user_role: Role.MODERATOR,
+                    joined_on: ts
+                }]
+            }
+
+            let communityInstance = new Community(communityObject)
+
+            communityInstance.save().then((doc) => {
+                if (doc) {
+                    res.send(responseMessageCreator({ data: doc, status: "Community created successfully" }))
+                } else {
+                    res.send(responseMessageCreator("Error occured while creating community"))
+                }
+            }).catch((e) => {
+                console.log(e)
+                res.status(500).send(responseMessageCreator("Internal error occured", 0))
+            })
+        }
     }
-    else{
+    else {
         res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
     }
 
 }
 
-export const deleteCommunity = (req : Request, res: Response) => {
+export const getCommunityUsingId = (req: Request, res: Response) => {
     let version = req.params.version
-    if(version == "v1"){
-        if (!Object.prototype.hasOwnProperty.call(req.body, "id")){
-            res.status(400).send(responseMessageCreator({message:"Please provide the id of the community to be deleted"}, 0))
-            return
-        }                  
-        let id = req.body.id
-        if (!Types.ObjectId.isValid(id)){
-            res.status(400).send(responseMessageCreator("Argument passed in must be a single String of 12 bytes or a string of 24 hex characters", 0))
-            return
+    if (version == "v1") {
+        let body = _.pick(req.body, ["community_id"])
+
+        if (body.community_id == null) {
+            res.send(responseMessageCreator("Invalid community id provided", 0))
+        } else {
+            Community.findOne({
+                community_id: body.community_id
+            }).then((doc) => {
+                res.send(responseMessageCreator({ data: doc }))
+            })
         }
-        Community.exists({_id:id}).then((result) => {
-            if (result) {
-                Community.deleteMany({_id:id}, (err) => {
-                    if (err) {
-                        console.log(err)
-                        res.status(500).send(responseMessageCreator("Internal Server Error!", 0))                      
-                    }
-                    else {
-                        res.status(200).send(responseMessageCreator("Community deleted Sucessfully!", 1))
-                    }            
-                })
-            }
-            else {
-                res.status(404).send(responseMessageCreator("No Such Community!", 0))
-            }
-        }).catch((err)=>{
-            console.log(err)
-            res.status(500).send(responseMessageCreator("Internal Server Error!", 0))
-        })
     }
-    else{
+    else {
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+
+export const deleteCommunity = (req: Request, res: Response) => {
+    let version = req.params.version
+    if (version == "v1") {
+
+        let body = _.pick(req.body, ["community_id"])
+
+        if (body.community_id == null) {
+            res.send(responseMessageCreator("Invalid community id provided", 0))
+        } else {
+            Community.exists({ community_id: body.community_id }).then((result) => {
+                if (result) {
+                    Community.deleteOne({
+                        community_id: body.community_id
+                    }).then((d) => {
+                        res.send(responseMessageCreator("Deleted community successfully"))
+                    }).catch((e) => {
+                        console.log(e)
+                        res.status(500).send(responseMessageCreator("Internal error occured", 0))
+                    })
+                }
+                else {
+                    res.status(400).send(responseMessageCreator("Invalid community id", 0))
+                }
+            }).catch((err) => {
+                console.log(err)
+                res.status(400).send(responseMessageCreator("Some error occured", 0))
+            })
+        }
+    }
+    else {
         res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
     }
 
 }
 
-export const modifyCommunityDetails = (req: Request, res: Response) => {
+export const addUserToPrivateCommunity = (req: Request, res: Response) => {
     let version = req.params.version
-    if (version == "v1"){
+    if (version == "v1") {
+        let body = _.pick(req.body, ["user_email", "community_id"])
 
-    }   
-    else{
-        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
-    }
-}
+        if (body.user_email != null && validateEmail(body.user_email)) {
+            User.exists({
+                email: body.user_email
+            }).then((result) => {
+                if (result) {
+                    User.findOne({
+                        email: body.user_email
+                    }).then((doc) => {
+                        if (doc) {
+                            Community.exists({
+                                community_id: body.community_id,
+                                "users_list.user_id": doc.user_id
+                            }).then((res2) => {
+                                if (!res2) {
+                                    Community.findOneAndUpdate({
+                                        community_id: body.community_id
+                                    }, {
+                                        $push: {
+                                            users_list: {
+                                                user_id: doc.user_id,
+                                                user_role: Role.FOLLOWER,
+                                                joined_on: Date.now()
+                                            }
+                                        }
+                                    }).then((doc) => {
+                                        if (doc) {
+                                            res.send(responseMessageCreator("Successfully added user"))
+                                        } else {
+                                            res.send(responseMessageCreator("Some error occured", 0))
+                                        }
+                                    })
+                                } else {
+                                    res.send(responseMessageCreator("User has already joined community", 0))
+                                }
+                            }).catch((e) => {
+                                res.status(400).send(responseMessageCreator("Some error occured", 0))
+                            })
 
-export const setCommunityRules = (req: Request, res: Response) => {
-    let version = req.params.version
-    if (version == "v1"){
-        if (!Object.prototype.hasOwnProperty.call(req.body, "id")){
-            res.status(400).send(responseMessageCreator("Please provide the id of the community!", 0))
-            return
-        }
-        if (!Object.prototype.hasOwnProperty.call(req.body, "rules")){
-            res.status(400).send(responseMessageCreator("Please provide the rules for that community!", 0))
-            return
-        }
-        let id = req.body.id
-        let rules = req.body.rules
-        if (!Types.ObjectId.isValid(id)){
-            res.status(400).send(responseMessageCreator("Invalid Id provided", 0))
-            return
-        }
-        if (rules.length == 0){
-            res.status(400).send(responseMessageCreator("Provide Some rules", 0))
-            return
-        }
-        Community.exists({_id:id}).then((result)=>{
-            if (result){
-                Community.findByIdAndUpdate(id,{"rules":rules}).then((result) => {
-                    res.status(200).send(result)
-                }).catch((err)=>{
-                    res.status(500).send(responseMessageCreator("Internal Server Error!", 0))
-                    console.log(err)
-                })
-            }
-            else{
-                res.status(404).send(responseMessageCreator("No Such Community!", 0))
-            }
-        }).catch((err)=>{
-            res.status(500).send(responseMessageCreator("Internal Server Error!", 0))
-            console.log(err)
-        })
+                        } else {
+                            res.send(responseMessageCreator("Invalid user email", 0))
+                        }
+                    })
+                } else {
+                    res.send(responseMessageCreator("Invalid user email", 0))
+                }
+            })
 
-    }   
-    else{
-        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
-    }
-}
-export const setCommunityAbout = (req: Request, res: Response) => {
-    let version = req.params.version
-    if (version == "v1"){
-        if (!Object.prototype.hasOwnProperty.call(req.body, "id")){
-            res.status(400).send(responseMessageCreator("Please provide the id of the community!", 0))
-            return
-        }
-        if (!Object.prototype.hasOwnProperty.call(req.body, "about")){
-            res.status(400).send(responseMessageCreator("Please tell us about that community!", 0))
-            return
-        }
-        let id = req.body.id
-        let about = req.body.about
-        if (!Types.ObjectId.isValid(id)){
-            res.status(400).send(responseMessageCreator("Invalid Id provided", 0))
-            return
-        }
-        if (about.length == 0){
-            res.status(400).send(responseMessageCreator("Provide Something in about", 0))
-            return
-        }
-        Community.exists({_id:id}).then((result)=>{
-            if (result){
-                Community.findByIdAndUpdate(id,{"about":about}).then((result) => {
-                    res.status(200).send(result)
-                }).catch((err)=>{
-                    res.status(500).send(responseMessageCreator("Internal Server Error!", 0))
-                    console.log(err)
-                })
-            }
-            else{
-                res.status(404).send(responseMessageCreator("No Such Community!", 0))
-            }
-        }).catch((err)=>{
-            res.status(500).send(responseMessageCreator("Internal Server Error!", 0))
-            console.log(err)
-        })
-    }   
-    else{
-        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
-    }
-}
-export const setCommunitySettings = (req: Request, res: Response) => {
-    let version = req.params.version
-    if (version == "v1"){
-        
-    }   
-    else{
-        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
-    }
-}
+        } else {
+            res.send(responseMessageCreator("Invalid user email", 0))
 
-export const addUserToCommunity = (req: Request, res: Response) => {
-    let version = req.params.version
-    if (version == "v1"){
-        if (!Object.prototype.hasOwnProperty.call(req.body, "community_id" )|| !Types.ObjectId.isValid(req.body.community_id)){
-            res.status(400).send(responseMessageCreator("Community id not provided or incorrect community id", 0))
-            return
         }
-        if (!Object.prototype.hasOwnProperty.call(req.body, "user_id") || !Types.ObjectId.isValid(req.body.user_id)){
-            res.status(400).send(responseMessageCreator("User id not provided or incorrect User id", 0))
-            return
-        }
-        let community_id = req.body.community_id
-        let user_id = req.body.user_id
-        Community.findById(community_id).then((doc)=>{
-            if (doc){
-                return doc 
-            }          
-            else{
-                return null
-            }
-        }).then((community)=>{
-            if (community){
-                // User.exists({user_id:user_id}).then((userExists)=>{
-                //     if (userExists){
-                Community.find({"followers_list.user_id":user_id, "_id":community_id}).then((result)=>{
-                    if (result.length){
-                        res.status(400).send(responseMessageCreator("Already a follower to this community!", 0))
-                    }
-                    else{
-                        community.followers_list.push({user_id:user_id, followed_on:Date.now()})
-                        community.save().then((result)=>{
-                            res.status(200).send(responseMessageCreator("User Added Successfully", 1))
-                        }).catch((err)=>{
-                            res.status(500).send(responseMessageCreator("Internal Server Error!", 0))
-                            console.log(err)
-                        })
-                    }
-                })
-                // }
-                // else{
-                //     res.status(400).send(responseMessageCreator("No such User Exists", 0))
-                // }
-            // })
-            }
-            else{
-                res.status(400).send(responseMessageCreator("No Such community!", 0))
-            }
-        }).catch((err)=>{
-            res.status(500).send(responseMessageCreator("Internal Server Error", 0))
-            console.log(err)
-        })
-    }   
-    else{
+    }
+    else {
         res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
     }
 }
 
 
+export const removeUserFromCommunity = (req: Request, res: Response) => {
+    let version = req.params.version
+    if (version == "v1") {
+        let body = _.pick(req.body, ["user_id", "community_id"])
 
-export default{
+        if (body.user_id != null) {
+            Community.exists({
+                community_id: body.community_id,
+                "users_list.user_id": body.user_id,
+                "users_list.user_role": Role.FOLLOWER
+            }).then((result) => {
+                if (result) {
+                    Community.findOneAndUpdate({
+                        community_id: body.community_id
+                    }, {
+                        $pull: {
+                            users_list: {
+                                user_id: body.user_id
+                            }
+                        }
+                    }).then((doc) => {
+                        if (doc) {
+                            res.send(responseMessageCreator("Successfully added user"))
+                        } else {
+                            res.send(responseMessageCreator("Some error occured", 0))
+                        }
+                    })
+                } else {
+                    res.send(responseMessageCreator("No user found with given credentials", 0))
+                }
+            }).catch((e) => {
+                res.status(400).send(responseMessageCreator("Invalid user", 0))
+            })
+        } else {
+            res.send(responseMessageCreator("Invalid user id", 0))
+        }
+    } else {
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+
+export const followPublicCommunity = (req: Request, res: Response) => {
+    let version = req.params.version
+    if (version == "v1") {
+        let body = _.pick(req.body, ["community_id"])
+
+        if (body.community_id == null) {
+            res.send(responseMessageCreator("Invalid community id", 0))
+        } else {
+            Community.exists({
+                community_id: body.community_id,
+                community_mode: CommunityMode.PUBLIC
+            }).then((result) => {
+                if (result) {
+                    Community.findOneAndUpdate({
+                        community_id: body.community_id
+                    }, {
+                        $push: {
+                            users_list: {
+                                user_id: req.user.user_id,
+                                user_role: Role.FOLLOWER,
+                                joined_on: Date.now()
+                            }
+                        }
+                    }).then((doc) => {
+                        if (doc) {
+                            res.send(responseMessageCreator("Successfully added user"))
+                        } else {
+                            res.send(responseMessageCreator("Some error occured", 0))
+                        }
+                    }).catch((e) => {
+                        console.log(e)
+                        res.status(400).send(responseMessageCreator("Some error occured", 0))
+                    })
+                } else {
+                    res.send(responseMessageCreator("Invalid community credentials", 0))
+                }
+            })
+        }
+    }
+    else {
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+
+export const unfollowCommunity = (req: Request, res: Response) => {
+    let version = req.params.version
+    if (version == "v1") {
+        let body = _.pick(req.body, ["community_id"])
+
+        if (body.community_id == null) {
+            res.send(responseMessageCreator("Invalid community id", 0))
+        } else {
+            Community.exists({
+                community_id: body.community_id,
+                "users_list.user_id": req.body.user_id,
+                $and: [
+                    { $or: [{ "users_list.user_role": Role.FOLLOWER }] },
+                    { $or: [{ "users_list.user_role": Role.MODERATOR }] }
+                ]
+            }).then((result) => {
+                if (result) {
+                    Community.findOneAndUpdate({
+                        community_id: body.community_id
+                    }, {
+                        $pull: {
+                            users_list: {
+                                user_id: req.user.user_id,
+                            }
+                        }
+                    }).then((doc) => {
+                        if (doc) {
+                            res.send(responseMessageCreator("Successfully removed user"))
+                        } else {
+                            res.send(responseMessageCreator("Some error occured", 0))
+                        }
+                    }).catch((e) => {
+                        console.log(e)
+                        res.status(400).send(responseMessageCreator("Some error occured", 0))
+                    })
+                } else {
+                    res.send(responseMessageCreator("Invalid community credentials", 0))
+                }
+            })
+        }
+    }
+    else {
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+
+export const addUserAsModerator = (req: Request, res: Response) => {
+    let version = req.params.version
+    if (version == "v1") {
+        let body = _.pick(req.body, ["community_id", "user_email"])
+
+        if (body.user_email != null && validateEmail(body.user_email)) {
+            User.exists({
+                email: body.user_email
+            }).then((result) => {
+                if (result) {
+                    User.findOne({
+                        email: body.user_email
+                    }).then((doc) => {
+                        if (doc) {
+                            Community.exists({
+                                community_id: body.community_id,
+                                "users_list.user_id": doc.user_id
+                            }).then((res2) => {
+                                if (!res2) {
+                                    Community.findOneAndUpdate({
+                                        community_id: body.community_id
+                                    }, {
+                                        $push: {
+                                            users_list: {
+                                                user_id: doc.user_id,
+                                                user_role: Role.MODERATOR,
+                                                joined_on: Date.now()
+                                            }
+                                        }
+                                    }).then((doc) => {
+                                        if (doc) {
+                                            res.send(responseMessageCreator("Successfully added user as moderator"))
+                                        } else {
+                                            res.send(responseMessageCreator("Some error occured", 0))
+                                        }
+                                    })
+                                } else {
+                                    Community.findOneAndUpdate({
+                                        community_id: body.community_id,
+                                        "users_list.user_id": doc.user_id
+                                    }, {
+                                        "users_list.user_role": Role.MODERATOR
+                                    }).then((doc) => {
+                                        if (doc) {
+                                            res.send(responseMessageCreator("Successfully added user as moderator"))
+                                        } else {
+                                            res.send(responseMessageCreator("Some error occured", 0))
+                                        }
+                                    })
+                                }
+                            }).catch((e) => {
+                                res.status(400).send(responseMessageCreator("Some error occured", 0))
+                            })
+
+                        } else {
+                            res.send(responseMessageCreator("Invalid user email", 0))
+                        }
+                    })
+                } else {
+                    res.send(responseMessageCreator("Invalid user email", 0))
+                }
+            })
+
+        } else {
+            res.send(responseMessageCreator("Invalid user email", 0))
+
+        }
+    }
+    else {
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+export const modifyCommunitySettings = (req: Request, res: Response) => {
+    let version = req.params.version
+    if (version == "v1") {
+        let body = _.pick(req.body, ["community_id", "community_dp", "community_banner", "about", "rules", "name", "community_mode"])
+        let data: any = new Object()
+        let isChanged = false
+
+        if (body.community_dp) {
+            isChanged = true
+            data.community_dp = body.community_dp
+        }
+
+        if (body.community_banner) {
+            isChanged = true
+            data.community_banner = body.community_banner
+        }
+
+        if (body.about) {
+            isChanged = true
+            data.about = body.about
+        }
+
+        if (body.rules) {
+            isChanged = true
+            data.rules = body.rules
+        }
+
+        if (body.name) {
+            isChanged = true
+            data.name = body.name
+        }
+
+        if (body.community_mode) {
+            isChanged = true
+            data.community_mode = body.community_mode
+        }
+
+        if (isChanged) {
+            Community.exists({
+                community_id: body.community_id
+            }).then((result) => {
+                if (result) {
+                    Community.findOneAndUpdate({
+                        community_id: body.community_id
+                    }, {
+                        ...data
+                    }).then((doc) => {
+                        if (doc) {
+                            res.send(responseMessageCreator("Details updated successfully"))
+                        } else {
+                            res.status(400).send(responseMessageCreator("Some error occured", 0))
+                        }
+                    }).catch((e) => {
+                        console.log({ e })
+                        res.status(400).send(responseMessageCreator("Some error occured", 0))
+                    })
+                } else {
+                    res.status(400).send(responseMessageCreator("Invalid community id", 0))
+                }
+            })
+        } else {
+            res.status(400).send(responseMessageCreator("Invalid query", 0))
+        }
+    }
+    else {
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+
+
+// export const s = (req: Request, res: Response) => {
+//     let version = req.params.version
+//     if (version == "v1") {  
+
+//     }
+//     else {
+//         res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+//     }
+// }
+
+export default {
     createCommunity,
+    getCommunityUsingId,
     deleteCommunity,
-    setCommunityRules,
-    setCommunityAbout,
-    addUserToCommunity
+
+    addUserToPrivateCommunity,
+    removeUserFromCommunity,
+
+    followPublicCommunity,
+    unfollowCommunity,
+
+    addUserAsModerator,
+
+    modifyCommunitySettings
 }
