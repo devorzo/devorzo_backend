@@ -121,7 +121,11 @@ export interface ICommunityDocument extends Document {
     //schema
     //todo: change later
     rules: string;
+    community_id: string;
+    community_mode: number;
 
+    community_dp: string,
+    community_banner: string
     name: string;
     about: string;
 
@@ -132,26 +136,39 @@ export interface ICommunityDocument extends Document {
         created_on: string;
     }[];
 
-    followers_list: {
-        user_id: string;
-        followed_on: number;
-    }[]
+    // followers_list: {
+    //     user_id: string;
+    //     followed_on: number;
+    // }[]
 
-    moderator_list: {
+    // moderator_list: {
+    //     user_id: string;
+    //     joined_on: number;
+    // }[]
+
+    users_list: {
         user_id: string;
+        user_role: number;
         joined_on: number;
-    }[]
-
-    banned_user: {
-        user_id: string;
-        // temp ban: cant see comm
-        // ban: see but cant post
-        // permanent ban: cant see cant post infinity
-        // suspension: see but cant post till time t
-        // ban_type: number;
         banned_on: number;
-        // banned_duration: number;
-    }[]
+    }[],
+
+    // invite_list: {
+    //     user_id: string;
+    //     invited_on: number;
+    //     status: number;
+    // }[]
+    
+    // banned_user: {
+    //     user_id: string;
+    //     // temp ban: cant see comm
+    //     // ban: see but cant post
+    //     // permanent ban: cant see cant post infinity
+    //     // suspension: see but cant post till time t
+    //     // ban_type: number;
+    //     banned_on: number;
+    //     // banned_duration: number;
+    // }[]
 
     // make recommendation engine
 }
@@ -169,7 +186,7 @@ export interface IUserInviteDocument extends Document {
     email: string,
     invite_code: string,
     invited_on: number,
-    status:number,
+    status: number,
 }
 
 export interface IUserInvite extends IUserInviteDocument {
