@@ -51,10 +51,7 @@ let whitelist = require("../whitelist.json")
 var corsOptions: cors.CorsOptions = {
     //@ts-ignore
     origin: function (origin: string, callback: any) {
-        console.log(whitelist.indexOf(origin), origin)
-        if (process.env.NODE_ENV == "development") {
-            if (!origin) return callback(null, true);
-        }
+        if (!origin) return callback(null, true);
 
         if (whitelist.indexOf(origin) !== -1) {
             callback(null, true)
