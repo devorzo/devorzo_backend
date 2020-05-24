@@ -13,6 +13,7 @@ export enum Status {
 }
 
 export enum Role {
+    ADMIN,
     FOLLOWER,
     MODERATOR,
     BANNED

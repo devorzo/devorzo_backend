@@ -2,13 +2,20 @@ import express from "express"
 
 import ArticleController from "../../services/controllers/article_controller"
 import { auth_middleware_wrapper_IS_LOGGED_IN } from "../middleware/auth_middleware"
-
+import { responseMessageCreator } from "../../lib/response_message_creator"
 const articleApiService = (app: express.Application) => {
     const router = express.Router()
 
-    router.get("/article-api-service,", (req, res) => {
-        res.send({ status: 200, success: true })
+    router.get("/api/:version/article-api-service", (req, res) => {
+        let version = req.params.version
+        if (version == "v1") {
+            res.send({ status: 200, success: true })
+        } else {
+            res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+        }
     })
+
+    // router.get
 
     router.post("/api/:version/createArticle",
         auth_middleware_wrapper_IS_LOGGED_IN,
@@ -18,8 +25,7 @@ const articleApiService = (app: express.Application) => {
         auth_middleware_wrapper_IS_LOGGED_IN,
         ArticleController.getArticlesByUserId)
 
-    router.get("/api/:version/getArticleById",
-        auth_middleware_wrapper_IS_LOGGED_IN,
+    router.post("/api/:version/getArticleById",
         ArticleController.getArticleById)
 
     // todo
@@ -32,7 +38,7 @@ const articleApiService = (app: express.Application) => {
 
     router.get("/api/:version/getTagsByArticleId")
 
-    router.patch("/api/:version/updateArticleById",
+    router.post("/api/:version/updateArticleById",
         auth_middleware_wrapper_IS_LOGGED_IN,
         ArticleController.UpdateArticleById)
 

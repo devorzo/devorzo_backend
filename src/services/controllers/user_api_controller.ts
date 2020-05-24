@@ -307,7 +307,7 @@ export const getUserArticlesUsingId = (req: Request, res: Response) => {
 }
 
 export const updateUserSetting = (req: Request, res: Response) => {
-    let version = req.params.version;
+    let version = req.params.version
     if (version == "v1") {
         let body = _.pick(req.body, ["fullname", "user_bio", "gender", "profile_image_link"])
 
@@ -317,13 +317,13 @@ export const updateUserSetting = (req: Request, res: Response) => {
 
         Object.entries(body).forEach(([key, value]) => {
             data[`details.${key}`] = value
-        });
+        })
 
         console.log({ data })
         if (!(Object.keys(body).length === 0)) {
 
             if (Object.keys(body).length === 4 || req.body.initialiseUser == 1) {
-                data['account_initialised'] = 1
+                data["account_initialised"] = 1
             }
             User.findOneAndUpdate({
                 user_id: req.user.user_id
@@ -349,7 +349,7 @@ export const updateUserSetting = (req: Request, res: Response) => {
 }
 
 export const addToBookmark = (req: Request, res: Response) => {
-    let version = req.params.version;
+    let version = req.params.version
     if (version == "v1") {
         let body = _.pick(req.body, ["article_id"])
 
@@ -397,7 +397,7 @@ export const addToBookmark = (req: Request, res: Response) => {
 }
 
 export const getAllUserBookmarks = (req: Request, res: Response) => {
-    let version = req.params.version;
+    let version = req.params.version
 
     console.log({ query: req.query, body: req.body })
     if (version == "v1") {
@@ -421,7 +421,7 @@ export const getAllUserBookmarks = (req: Request, res: Response) => {
 }
 
 export const removeArticleFromBookmark = (req: Request, res: Response) => {
-    let version = req.params.version;
+    let version = req.params.version
     if (version == "v1") {
         let body = _.pick(req.body, ["article_id"])
 
@@ -468,7 +468,7 @@ export const removeArticleFromBookmark = (req: Request, res: Response) => {
 }
 
 export const removeAllUserBookmarks = (req: Request, res: Response) => {
-    let version = req.params.version;
+    let version = req.params.version
     if (version == "v1") {
         User.exists({
             user_id: req.user.user_id,
@@ -495,7 +495,7 @@ export const removeAllUserBookmarks = (req: Request, res: Response) => {
 }
 
 export const addToHistory = (req: Request, res: Response) => {
-    let version = req.params.version;
+    let version = req.params.version
     if (version == "v1") {
         let body = _.pick(req.body, ["article_id"])
 
@@ -542,7 +542,7 @@ export const addToHistory = (req: Request, res: Response) => {
 }
 
 export const getCompleteHistory = (req: Request, res: Response) => {
-    let version = req.params.version;
+    let version = req.params.version
 
     console.log({ query: req.query, body: req.body })
     if (version == "v1") {
@@ -566,7 +566,7 @@ export const getCompleteHistory = (req: Request, res: Response) => {
 }
 
 export const removeArticleFromHistory = (req: Request, res: Response) => {
-    let version = req.params.version;
+    let version = req.params.version
     if (version == "v1") {
         let body = _.pick(req.body, ["article_id"])
 
@@ -613,7 +613,7 @@ export const removeArticleFromHistory = (req: Request, res: Response) => {
 }
 
 export const removeCompleteHistory = (req: Request, res: Response) => {
-    let version = req.params.version;
+    let version = req.params.version
     if (version == "v1") {
         User.exists({
             user_id: req.user.user_id,

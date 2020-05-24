@@ -51,7 +51,8 @@ let whitelist = require("../whitelist.json")
 var corsOptions: cors.CorsOptions = {
     //@ts-ignore
     origin: function (origin: string, callback: any) {
-        if (!origin) return callback(null, true);
+        console.log(origin, whitelist.indexOf(origin))
+        if (!origin) return callback(null, true)
 
         if (whitelist.indexOf(origin) !== -1) {
             callback(null, true)
@@ -73,12 +74,12 @@ const MongoDBStore = connectMongoDBSession(session)
 
 /* body parser */
 app.use(bodyParser.urlencoded({
-    limit: '50mb',
+    limit: "50mb",
     parameterLimit: 100000,
     extended: true
 }))
 app.use(bodyParser.json({
-    limit: '50mb'
+    limit: "50mb"
 }))
 
 /* Session */
@@ -128,7 +129,7 @@ app.get("/", (req, res) => {
 })
 
 app.get("/load", (req, res) => {
-    let mem = process.memoryUsage();
+    let mem = process.memoryUsage()
     res.send({
         memory: {
             rss: mem.rss / (1024 * 1024),

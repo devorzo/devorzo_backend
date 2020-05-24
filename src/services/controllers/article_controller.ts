@@ -6,12 +6,13 @@ import "../../database/models/article"
 import { Request, Response } from "express"
 import logger, { Level } from "../../lib/logger"
 import { responseMessageCreator } from "../../lib/response_message_creator"
-import Article from "../../database/models/article"
+import Article, { randNum } from "../../database/models/article"
+import { v4 } from "uuid"
 
 export const createArticle = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1") {
-        let body = _.pick(req.body, ["title", "content", "preview", "community_id"])
+        let body = _.pick(req.body, ["title", "content", "preview", "article_banner", "community_id"])
 
         if (body.title == null) {
             res.status(400).send(responseMessageCreator("Invalid article title", 0))
@@ -29,6 +30,8 @@ export const createArticle = (req: Request, res: Response) => {
                 "content": body.content,
                 "created_on": Date.now(),
                 "preview": body.preview,
+                "article_id": `article.${v4()}`,
+                "article_banner": (body.article_banner) ? body.article_banner : "NA",
                 "author_id": req.user.user_id,
                 "community_id": (!body.community_id) ? "NA" : body.community_id,
                 "belongs_to_community": (!body.community_id) ? 0 : 1,
@@ -39,7 +42,7 @@ export const createArticle = (req: Request, res: Response) => {
             articleInstance.save(function (err, doc) {
                 if (err) {
                     logger(err)
-                    res.status(400).send(responseMessageCreator("Error occured", 1))
+                    res.status(400).send(responseMessageCreator("Error occured", 0))
                 } else {
                     logger("Article is saved in database sucessfully!")
                     res.send(responseMessageCreator({ data: doc, status: "Article saved successfully!" }, 1))
@@ -67,7 +70,7 @@ export const getArticleById = (req: Request, res: Response) => {
                     console.log(doc)
                     res.send(responseMessageCreator({ data: doc }))
                 } else {
-                    res.send(responseMessageCreator("No Article found", 0))
+                    res.status(400).send(responseMessageCreator("No Article found", 0))
                 }
             })
         }
@@ -105,7 +108,7 @@ export const getArticlesByUserId = (req: Request, res: Response) => {
                                 "tags",
                             ])
 
-                            d.likes = (d.likes) ? d.likes.length : 0;
+                            d.likes = (d.likes) ? d.likes.length : 0
 
                             return d
                         })
@@ -150,7 +153,7 @@ export const getArticleByCommunityId = (req: Request, res: Response) => {
 export const UpdateArticleById = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1") {
-        let body = _.pick(req.body, ["title", "content", "preview", "article_id"])
+        let body = _.pick(req.body, ["title", "content", "preview", "article_id", "article_banner"])
         if (body.article_id == null) {
             res.status(400).send(responseMessageCreator("Invalid article id", 0))
         } else if (body.title == null) {
@@ -163,28 +166,30 @@ export const UpdateArticleById = (req: Request, res: Response) => {
             res.status(400).send(responseMessageCreator("Invalid article preview", 0))
         } else {
 
-            Article.exists({
+            Article.findOne({
                 article_id: body.article_id
             }).then((doc: any) => {
                 if (doc) {
                     if (doc.author_id == req.user.user_id) {
                         Article.findOneAndUpdate({
-                            article_id: body.article_id
+                            article_id: body.article_id,
+                            author_id: req.user.user_id
                         }, {
                             title: body.title,
                             content: body.content,
                             preview: body.preview,
                             edited: 1,
-                            last_edited_on: Date.now()
+                            last_edited_on: Date.now(),
+                            article_banner: (body.article_banner) ? body.article_banner : "NA"
                         }).then((doc: any) => {
                             if (doc) {
                                 res.send(responseMessageCreator({ data: doc }))
                             } else {
-                                res.send(responseMessageCreator("No Article found", 0))
+                                res.status(400).send(responseMessageCreator("No Article found", 0))
                             }
                         })
                     } else {
-                        res.status(401).send(responseMessageCreator("INVALID AUTH"))
+                        res.status(401).send(responseMessageCreator("Invalid Auth", 0))
                     }
                 } else {
                     res.status(400).send(responseMessageCreator("No Article found", 0))

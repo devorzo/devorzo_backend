@@ -88,7 +88,7 @@ export interface IArticleDocument extends Document {
 
     author_id: string;
     article_id: string;
-
+    article_banner: string;
     views: number;
 
     community_id: string;
