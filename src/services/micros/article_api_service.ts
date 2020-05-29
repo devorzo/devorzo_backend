@@ -25,12 +25,22 @@ const articleApiService = (app: express.Application) => {
         auth_middleware_wrapper_IS_LOGGED_IN,
         ArticleController.getArticlesByUserId)
 
+    router.get("/api/:version/getArticlesByUsername/:username",
+        ArticleController.getArticlesByUsername)
+
     router.post("/api/:version/getArticleById",
         ArticleController.getArticleById)
 
     // todo
     router.get("/api/:version/getArticleByTag",
         auth_middleware_wrapper_IS_LOGGED_IN)
+
+    router.get("/api/:version/getLatestArticle",
+        ArticleController.getLatestArticle)
+    router.get("/api/:version/getPopularArticle",
+        ArticleController.getPopularArticle)
+    router.get("/api/:version/getFeaturedArticle",
+        ArticleController.getFeaturedArticle)
 
     router.get("/api/:version/getArticleByCommunityId",
         auth_middleware_wrapper_IS_LOGGED_IN,

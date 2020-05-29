@@ -63,7 +63,10 @@ var corsOptions: cors.CorsOptions = {
 }
 
 app.use(helmet())
-app.use(cors(corsOptions))
+if (process.env.NODE_ENV == "development")
+    app.use(cors())
+else
+    app.use(cors(corsOptions))
 
 
 /*  Database handlers */

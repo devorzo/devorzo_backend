@@ -29,7 +29,33 @@ export const userDetailsController = (req: Request, res: Response) => {
                 d = doc.toJSON()
             res.send(responseMessageCreator(d))
         }).catch((e) => {
-            res.status(400).send(responseMessageCreator(0, e))
+            res.status(400).send(responseMessageCreator(e, 0))
+        })
+    } else {
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+
+export const getUserByUsername = (req: Request, res: Response) => {
+    let version = req.params.version
+
+    if (version == "v1") {
+        // logger({ body }, Level.INFO)
+        // if (body.id == null || body.id == undefined) {
+        //     res.status(400).send(responseMessageCreator("Invalid user id", 0))
+        // }
+
+        console.log({params: req.params})
+        User.findOne({
+            "details.username": req.params.username
+        }).then((doc) => {
+            if (doc) {
+                res.send(responseMessageCreator({ data: doc.toJSON() }))
+            } else {
+                res.status(400).send(responseMessageCreator("Invalid username", 0))
+            }
+        }).catch((e) => {
+            res.status(400).send(responseMessageCreator(e, 0))
         })
     } else {
         res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
@@ -39,39 +65,27 @@ export const userDetailsController = (req: Request, res: Response) => {
 export const followUserUsingId = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1") {
-        let body = _.pick(req.body, ["follower_id", "user_token"])
-
-        let decoded: any = null
-        if (req.session) {
-            if (req.session.logged == true) {
-                decoded = req.session.user_id
-            }
-        }
-        if (decoded == null) {
-            decoded = jwt.decode(body.user_token, { complete: true })
-            decoded = decoded.user_id
-        }
-
-        if (decoded == null) {
-            res.status(400).send(responseMessageCreator("Invalid or empty token.", 0))
-        }
-
-        Followers.findOneAndUpdate({
-            user_id: decoded
-        }, {
-            $push: {
-                followers: {
-                    follower_id: body.follower_id,
-                    followed_on: Date.now()
+        let body = _.pick(req.body, ["user_id"])
+        if (body.user_id == null) {
+            res.send(responseMessageCreator("Invalid user id", 0))
+        } else {
+            Followers.findOneAndUpdate({
+                user_id: body.user_id
+            }, {
+                $push: {
+                    followers: {
+                        follower_id: req.user.user_id,
+                        followed_on: Date.now()
+                    }
                 }
-            }
-        }, function (err, doc) {
-            if (!err) {
-                res.send(responseMessageCreator(doc))
-            } else {
-                res.status(400).send(responseMessageCreator({ err, doc }, 0))
-            }
-        })
+            }, function (err, doc) {
+                if (!err) {
+                    res.send(responseMessageCreator(doc))
+                } else {
+                    res.status(400).send(responseMessageCreator({ err, doc }, 0))
+                }
+            })
+        }
     } else {
         res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
     }
@@ -81,38 +95,27 @@ export const followUserUsingId = (req: Request, res: Response) => {
 export const unfollowUserUsingId = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1") {
-        let body = _.pick(req.body, ["follower_id", "user_token"])
+        let body = _.pick(req.body, ["user_id"])
 
-        let decoded: any = null
-        if (req.session) {
-            if (req.session.logged == true) {
-                decoded = req.session.user_id
-            }
-        }
-        if (decoded == null) {
-            decoded = jwt.decode(body.user_token, { complete: true })
-            decoded = decoded.user_id
-        }
-
-        if (decoded == null) {
-            res.status(400).send(responseMessageCreator("Invalid or empty token.", 0))
-        }
-
-        Followers.findOneAndUpdate({
-            user_id: decoded
-        }, {
-            $pull: {
-                followers: {
-                    follower_id: body.follower_id
+        if (body.user_id == null) {
+            res.send(responseMessageCreator("Invalid user id", 0))
+        } else {
+            Followers.findOneAndUpdate({
+                user_id: body.user_id
+            }, {
+                $pull: {
+                    followers: {
+                        follower_id: req.user.user_id
+                    }
                 }
-            }
-        }, function (err, doc) {
-            if (!err) {
-                res.send(responseMessageCreator(doc))
-            } else {
-                res.status(400).send(responseMessageCreator({ err, doc }, 0))
-            }
-        })
+            }, function (err, doc) {
+                if (!err) {
+                    res.send(responseMessageCreator(doc))
+                } else {
+                    res.status(400).send(responseMessageCreator({ err, doc }, 0))
+                }
+            })
+        }
     } else {
         res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
     }
@@ -121,34 +124,24 @@ export const unfollowUserUsingId = (req: Request, res: Response) => {
 export const getAllUserFollowers = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1") {
-        let body = _.pick(req.body, ["user_token"])
-        let decoded: any = null
-        if (req.session) {
-            if (req.session.logged == true) {
-                decoded = req.session.user_id
-            }
-        }
-        if (decoded == null) {
-            decoded = jwt.decode(body.user_token, { complete: true })
-            decoded = decoded.user_id
-        }
+        let body = _.pick(req.body, ["user_id"])
 
-        if (decoded == null) {
-            res.status(400).send(responseMessageCreator("Invalid or empty token.", 0))
+        if (body.user_id == null) {
+            res.send(responseMessageCreator("Invalid user id", 0))
+        } else {
+            Followers.findOne({
+                user_id: body.user_id
+            }, function (err, doc) {
+                if (!err) {
+
+                    let count = doc?.followers.length
+                    let followers = doc?.followers
+                    res.send(responseMessageCreator({ count, followers }))
+                } else {
+                    res.status(400).send(responseMessageCreator({ err, doc }, 0))
+                }
+            })
         }
-
-        Followers.findOne({
-            user_id: decoded
-        }, function (err, doc) {
-            if (!err) {
-
-                let count = doc?.followers.length
-                let followers = doc?.followers
-                res.send(responseMessageCreator({ count, followers }))
-            } else {
-                res.status(400).send(responseMessageCreator({ err, doc }, 0))
-            }
-        })
     } else {
         res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
     }
@@ -158,24 +151,8 @@ export const getAllUserFollowers = (req: Request, res: Response) => {
 export const getAllPeopleUserFollows = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1") {
-        let body = _.pick(req.body, ["user_token"])
 
-        let decoded: any = null
-        if (req.session) {
-            if (req.session.logged == true) {
-                decoded = req.session.user_id
-            }
-        }
-        if (decoded == null) {
-            decoded = jwt.decode(body.user_token, { complete: true })
-            decoded = decoded.user_id
-        }
-
-        if (decoded == null) {
-            res.status(400).send(responseMessageCreator("Invalid or empty token.", 0))
-        }
-
-        let follower_id: string = decoded
+        let follower_id: string = req.user.user_id
         Followers.find({
             followers: {
                 $elemMatch: {
@@ -311,7 +288,7 @@ export const updateUserSetting = (req: Request, res: Response) => {
     if (version == "v1") {
         let body = _.pick(req.body, ["fullname", "user_bio", "gender", "profile_image_link"])
 
-        let data: any = {}
+        let data: any = new Object()
         body = cleanObject(body)
         console.log({ body })
 
@@ -334,7 +311,10 @@ export const updateUserSetting = (req: Request, res: Response) => {
             }, {
                 new: true
             }).then((doc) => {
-                res.send(responseMessageCreator({ doc }, 1))
+                if (doc)
+                    res.send(responseMessageCreator({ user: doc.toJSON() }, 1))
+                else
+                    res.send(responseMessageCreator("Some error occured", 0))
             }).catch((e) => {
                 res.status(400).send(responseMessageCreator({ e }, 0))
             })
@@ -641,6 +621,7 @@ export const removeCompleteHistory = (req: Request, res: Response) => {
 
 export default {
     userDetailsController,
+    getUserByUsername,
 
     followUserUsingId,
     unfollowUserUsingId,

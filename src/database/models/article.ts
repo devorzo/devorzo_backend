@@ -9,6 +9,10 @@ export enum BooleanFlag {
     NOT_DECIDED = -1
 }
 
+export enum ArticleType {
+    NORMAL,
+    FEATURED
+}
 export const randNum = (min: number, max: number) => {
     let random = Math.round(Math.random() * (+max - +min) + +min)
     return random
@@ -73,6 +77,10 @@ const ArticleSchema: Schema = new Schema({
         type: Number,
         default: 0,
         required: true
+    },
+
+    article_type: {
+        type: Number
     },
 
     community_id: {

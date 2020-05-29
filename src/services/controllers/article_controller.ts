@@ -6,9 +6,15 @@ import "../../database/models/article"
 import { Request, Response } from "express"
 import logger, { Level } from "../../lib/logger"
 import { responseMessageCreator } from "../../lib/response_message_creator"
-import Article, { randNum } from "../../database/models/article"
+import Article, { ArticleType } from "../../database/models/article"
 import { v4 } from "uuid"
+import User from "../../database/models/user"
 
+export enum CommunityArticleQuery {
+    LATEST,
+    FEATURED,
+    POPULAR
+}
 export const createArticle = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1") {
@@ -82,39 +88,69 @@ export const getArticlesByUserId = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1") {
 
-        let body = _.pick(req.body, ["author_id"])
+        let body = _.pick(req.body, ["author_id", "page", "limit"])
+
         if (body.author_id == null) {
             res.status(400).send(responseMessageCreator("Invalid author id", 0))
         } else {
-            Article.find({
-                author_id: body.author_id
-            }).then((doc: any) => {
+
+            if (body.page == null || isNaN(body.page)) {
+                body.page = 0
+            }
+
+            if (body.limit == null || isNaN(body.limit)) {
+                body.limit = 10
+            }
+
+            let query = []
+
+            query.push({ $match: { author_id: body.author_id } })
+            query.push({ $skip: (+body.page) * 10 })
+            query.push({ $limit: +body.limit })
+            query.push({ $sort: { _id: -1 } })
+
+            // query.push({
+            //     $lookup: {
+            //         from: "users",
+            //         localField: "author_id",
+            //         foreignField: "user_id",
+            //         as: "author_details"
+            //     }
+            // })
+
+            Article.aggregate(query).then((doc: any) => {
                 if (doc) {
+                    doc = doc.map((item: any) => {
 
-                    // console.log(doc)
-                    if (doc.length > 0) {
-                        doc = doc.map((item: any) => {
+                        let d = _.pick(item, ["created_on",
+                            "article_id",
+                            "article_banner",
+                            "views",
+                            "community_id",
+                            "belongs_to_community",
+                            "moderation_status",
+                            "duration_of_article",
+                            "title",
+                            "preview",
+                            "likes",
+                            "tags",
+                        ])
 
-                            let d = _.pick(item, ["created_on",
-                                "article_id",
-                                "views",
-                                "community_id",
-                                "belongs_to_community",
-                                "moderation_status",
-                                "duration_of_article",
-                                "title",
-                                "preview",
-                                "likes",
-                                "tags",
-                            ])
+                        // let author_details = {
+                        //     fullname: item.author_details[0].details.fullname,
+                        //     username: item.author_details[0].details.username,
+                        //     user_id: item.author_details[0].user_id,
+                        //     profile_image_link: item.author_details[0].details.profile_image_link
+                        // }
 
-                            d.likes = (d.likes) ? d.likes.length : 0
+                        d.likes = (d.likes) ? d.likes.length : 0
 
-                            return d
-                        })
-                    }
+                        return {
+                            ...d
+                        }
+                    })
+
                     res.send(responseMessageCreator({ data: doc }))
-
                 } else {
                     res.send(responseMessageCreator("Error", 0))
                 }
@@ -126,19 +162,403 @@ export const getArticlesByUserId = (req: Request, res: Response) => {
         res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
     }
 }
+
+export const getArticlesByUsername = (req: Request, res: Response) => {
+    let version = req.params.version
+    if (version == "v1") {
+
+        let body = _.pick(req.body, ["username", "page", "limit"])
+
+        body.username = req.params.username
+        if (body.username == null) {
+            res.status(400).send(responseMessageCreator("Invalid username", 0))
+        } else {
+
+            User.findOne({
+                "details.username": body.username
+            }).then((doc) => {
+                if (doc) {
+                    let author_id = doc?.user_id
+
+                    if (body.page == null || isNaN(body.page)) {
+                        body.page = 0
+                    }
+
+                    if (body.limit == null || isNaN(body.limit)) {
+                        body.limit = 10
+                    }
+
+                    let query = []
+
+                    query.push({ $match: { author_id: author_id } })
+                    query.push({ $skip: (+body.page) * 10 })
+                    query.push({ $limit: +body.limit })
+                    query.push({ $sort: { _id: -1 } })
+
+
+                    Article.aggregate(query).then((result: any) => {
+                        if (result) {
+                            result = result.map((item: any) => {
+
+                                let d = _.pick(item, ["created_on",
+                                    "article_id",
+                                    "article_banner",
+                                    "views",
+                                    "community_id",
+                                    "belongs_to_community",
+                                    "moderation_status",
+                                    "duration_of_article",
+                                    "title",
+                                    "preview",
+                                    "likes",
+                                    "tags",
+                                ])
+
+                                // let author_details = {
+                                //     fullname: item.author_details[0].details.fullname,
+                                //     username: item.author_details[0].details.username,
+                                //     user_id: item.author_details[0].user_id,
+                                //     profile_image_link: item.author_details[0].details.profile_image_link
+                                // }
+
+                                d.likes = (d.likes) ? d.likes.length : 0
+
+                                return {
+                                    ...d
+                                }
+                            })
+
+                            res.send(responseMessageCreator({
+                                data: result,
+                                user: {
+                                    fullname: doc.details.fullname,
+                                    username: doc.details.username,
+                                    user_id: doc.user_id,
+                                    profile_image_link: doc.details.profile_image_link
+                                }
+                            }))
+                        } else {
+                            res.send(responseMessageCreator("Error", 0))
+                        }
+                    })
+
+                } else {
+                    res.status(400).send(responseMessageCreator("Invalid username", 0))
+                }
+            })
+        }
+    }
+    else {
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+
+export const getLatestArticle = (req: Request, res: Response) => {
+    let version = req.params.version
+    if (version == "v1") {
+
+        let body = _.pick(req.body, ["page", "limit"])
+        if (body.page == null || isNaN(body.page)) {
+            body.page = 0
+        }
+
+        if (body.limit == null || isNaN(body.limit)) {
+            body.limit = 10
+        }
+        Article.aggregate([
+            { $skip: (+body.page) * 10 },
+            { $limit: +body.limit },
+            { $sort: { _id: -1 } },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "author_id",
+                    foreignField: "user_id",
+                    as: "author_details"
+                }
+            }
+        ]).then((doc: any) => {
+            if (doc) {
+
+                // console.log(doc)
+                if (doc.length > 0) {
+                    doc = doc.map((item: any) => {
+
+                        let d = _.pick(item, ["created_on",
+                            "article_id",
+                            "article_banner",
+                            "views",
+                            "community_id",
+                            "belongs_to_community",
+                            "moderation_status",
+                            "duration_of_article",
+                            "title",
+                            "preview",
+                            "likes",
+                            "tags",
+                        ])
+
+                        let author_details = {
+                            fullname: item.author_details[0].details.fullname,
+                            username: item.author_details[0].details.username,
+                            user_id: item.author_details[0].user_id,
+                            profile_image_link: item.author_details[0].details.profile_image_link
+                        }
+
+                        d.likes = (d.likes) ? d.likes.length : 0
+
+                        return {
+                            ...d,
+                            author_details
+                        }
+                    })
+                }
+                res.send(responseMessageCreator({ data: doc }))
+
+            } else {
+                res.send(responseMessageCreator("Error", 0))
+            }
+        })
+
+
+    }
+    else {
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+
+export const getPopularArticle = (req: Request, res: Response) => {
+    let version = req.params.version
+    if (version == "v1") {
+
+        let body = _.pick(req.body, ["page", "limit"])
+        if (body.page == null || isNaN(body.page)) {
+            body.page = 0
+        }
+
+        if (body.limit == null || isNaN(body.limit)) {
+            body.limit = 10
+        }
+        Article.aggregate([
+            { $skip: (+body.page) * 10 },
+            { $limit: +body.limit },
+            { $sort: { views: -1 } },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "author_id",
+                    foreignField: "user_id",
+                    as: "author_details"
+                }
+            }
+        ]).then((doc: any) => {
+            if (doc) {
+
+                // console.log(doc)
+                if (doc.length > 0) {
+                    doc = doc.map((item: any) => {
+
+                        let d = _.pick(item, ["created_on",
+                            "article_id",
+                            "article_banner",
+                            "views",
+                            "community_id",
+                            "belongs_to_community",
+                            "moderation_status",
+                            "duration_of_article",
+                            "title",
+                            "preview",
+                            "likes",
+                            "tags",
+                        ])
+
+                        let author_details = {
+                            fullname: item.author_details[0].details.fullname,
+                            username: item.author_details[0].details.username,
+                            user_id: item.author_details[0].user_id,
+                            profile_image_link: item.author_details[0].details.profile_image_link
+                        }
+
+                        d.likes = (d.likes) ? d.likes.length : 0
+
+                        return {
+                            ...d,
+                            author_details
+                        }
+                    })
+                }
+                res.send(responseMessageCreator({ data: doc }))
+
+            } else {
+                res.send(responseMessageCreator("Error", 0))
+            }
+        })
+
+
+    }
+    else {
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+
+export const getFeaturedArticle = (req: Request, res: Response) => {
+    let version = req.params.version
+    if (version == "v1") {
+
+        let body = _.pick(req.body, ["page", "limit"])
+        if (body.page == null || isNaN(body.page)) {
+            body.page = 0
+        }
+
+        if (body.limit == null || isNaN(body.limit)) {
+            body.limit = 10
+        }
+        Article.aggregate([
+            { $match: { article_type: ArticleType.FEATURED } },
+            { $skip: (+body.page) * 10 },
+            { $limit: +body.limit },
+            { $sort: { _id: -1 } },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "author_id",
+                    foreignField: "user_id",
+                    as: "author_details"
+                }
+            }
+        ]).then((doc: any) => {
+            if (doc) {
+
+                // console.log(doc)
+                if (doc.length > 0) {
+                    doc = doc.map((item: any) => {
+
+                        let d = _.pick(item, ["created_on",
+                            "article_id",
+                            "article_banner",
+                            "views",
+                            "community_id",
+                            "belongs_to_community",
+                            "moderation_status",
+                            "duration_of_article",
+                            "title",
+                            "preview",
+                            "likes",
+                            "tags",
+                        ])
+
+                        let author_details = {
+                            fullname: item.author_details[0].details.fullname,
+                            username: item.author_details[0].details.username,
+                            user_id: item.author_details[0].user_id,
+                            profile_image_link: item.author_details[0].details.profile_image_link
+                        }
+
+                        d.likes = (d.likes) ? d.likes.length : 0
+
+                        return {
+                            ...d,
+                            author_details
+                        }
+                    })
+                }
+                res.send(responseMessageCreator({ data: doc }))
+
+            } else {
+                res.send(responseMessageCreator("Error", 0))
+            }
+        })
+
+
+    }
+    else {
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+
+
 export const getArticleByCommunityId = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1") {
-        let body = _.pick(req.body, ["community_id"])
+        let body = _.pick(req.body, ["community_id", "mode", "page", "limit"])
+
+        if (body.mode == null || isNaN(body.mode) || body.mode < 0 || body.mode > 2) {
+            body.mode = CommunityArticleQuery.LATEST
+        }
 
         if (body.community_id == null || body.community_id == "NA") {
             res.status(400).send(responseMessageCreator("Invalid community id", 0))
         } else {
-            Article.find({
-                community_id: body.community_id
-            }).then((doc: any) => {
+
+            if (body.page == null || isNaN(body.page)) {
+                body.page = 0
+            }
+
+            if (body.limit == null || isNaN(body.limit)) {
+                body.limit = 10
+            }
+
+            let query = []
+            if (body.mode == CommunityArticleQuery.FEATURED) {
+                query.push({
+                    $match: {
+                        community_id: body.community_id,
+                        article_type: ArticleType.FEATURED
+                    }
+                })
+            } else {
+                query.push({ $match: { community_id: body.community_id } })
+            }
+            query.push({ $skip: (+body.page) * 10 })
+            query.push({ $limit: +body.limit })
+            if (body.mode == CommunityArticleQuery.LATEST || body.mode == CommunityArticleQuery.FEATURED) {
+                query.push({ $sort: { _id: -1 } })
+            } else if (body.mode == CommunityArticleQuery.POPULAR) {
+                query.push({ $sort: { views: -1 } })
+            }
+
+            query.push({
+                $lookup: {
+                    from: "users",
+                    localField: "author_id",
+                    foreignField: "user_id",
+                    as: "author_details"
+                }
+            })
+
+            Article.aggregate(query).then((doc: any) => {
                 if (doc) {
-                    console.log(doc)
+                    doc = doc.map((item: any) => {
+
+                        let d = _.pick(item, ["created_on",
+                            "article_id",
+                            "article_banner",
+                            "views",
+                            "community_id",
+                            "belongs_to_community",
+                            "moderation_status",
+                            "duration_of_article",
+                            "title",
+                            "preview",
+                            "likes",
+                            "tags",
+                        ])
+
+                        let author_details = {
+                            fullname: item.author_details[0].details.fullname,
+                            username: item.author_details[0].details.username,
+                            user_id: item.author_details[0].user_id,
+                            profile_image_link: item.author_details[0].details.profile_image_link
+                        }
+
+                        d.likes = (d.likes) ? d.likes.length : 0
+
+                        return {
+                            ...d,
+                            author_details
+                        }
+                    })
+
                     res.send(responseMessageCreator({ data: doc }))
                 } else {
                     res.send(responseMessageCreator("Error", 0))
@@ -317,7 +737,13 @@ export const deleteAllCommunityArticleByCommunityId = (req: Request, res: Respon
 export default {
     createArticle,
     getArticleById,
+
+    getLatestArticle,
+    getFeaturedArticle,
+    getPopularArticle,
+
     getArticlesByUserId,
+    getArticlesByUsername,
     getArticleByCommunityId,
     UpdateArticleById,
     deleteArticleById,

@@ -20,6 +20,8 @@ const userApiService = (app: express.Application) => {
     // Details
     router.get("/api/:version/getUserUsingId", userController.userDetailsController)
 
+    router.get("/api/:version/getUserByUsername/:username", userController.getUserByUsername)
+
     // Actions
     router.post("/api/:version/followUserUsingUid",
         auth_middleware_wrapper_IS_LOGGED_IN,
