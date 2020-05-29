@@ -18,7 +18,7 @@ export enum CommunityArticleQuery {
 export const createArticle = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1") {
-        let body = _.pick(req.body, ["title", "content", "preview", "article_banner", "community_id"])
+        let body = _.pick(req.body, ["title", "content", "preview", "article_banner", "community_id", "tags"])
 
         if (body.title == null) {
             res.status(400).send(responseMessageCreator("Invalid article title", 0))
@@ -31,11 +31,28 @@ export const createArticle = (req: Request, res: Response) => {
         } else {
 
 
+            let d: any = new Object()
+
+            d.title = body.title
+            d.content = body.content
+            d.preview = body.preview
+
+            if (body.tags) {
+                if (body.tags.length > 0 && Array.isArray(body.tags)) {
+                    body.tags = body.tags.map((i: any) => {
+                        return {
+                            tag: i,
+                            added_on: Date.now()
+                        }
+                    })
+
+                    d.tags = body.tags
+                }
+            }
+
             let article = {
-                "title": body.title,
-                "content": body.content,
+                ...d,
                 "created_on": Date.now(),
-                "preview": body.preview,
                 "article_id": `article.${v4()}`,
                 "article_banner": (body.article_banner) ? body.article_banner : "NA",
                 "author_id": req.user.user_id,
@@ -573,7 +590,7 @@ export const getArticleByCommunityId = (req: Request, res: Response) => {
 export const UpdateArticleById = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1") {
-        let body = _.pick(req.body, ["title", "content", "preview", "article_id", "article_banner"])
+        let body = _.pick(req.body, ["title", "content", "preview", "article_id", "article_banner", "tags"])
         if (body.article_id == null) {
             res.status(400).send(responseMessageCreator("Invalid article id", 0))
         } else if (body.title == null) {
@@ -585,7 +602,24 @@ export const UpdateArticleById = (req: Request, res: Response) => {
         } else if (body.preview == null) {
             res.status(400).send(responseMessageCreator("Invalid article preview", 0))
         } else {
+            let d: any = new Object()
 
+            d.title = body.title
+            d.content = body.content
+            d.preview = body.preview
+
+            if (body.tags) {
+                if (body.tags.length > 0 && Array.isArray(body.tags)) {
+                    body.tags = body.tags.map((i: any) => {
+                        return {
+                            tag: i,
+                            added_on: Date.now()
+                        }
+                    })
+
+                    d.tags = body.tags
+                }
+            }
             Article.findOne({
                 article_id: body.article_id
             }).then((doc: any) => {
@@ -595,9 +629,7 @@ export const UpdateArticleById = (req: Request, res: Response) => {
                             article_id: body.article_id,
                             author_id: req.user.user_id
                         }, {
-                            title: body.title,
-                            content: body.content,
-                            preview: body.preview,
+                            ...d,
                             edited: 1,
                             last_edited_on: Date.now(),
                             article_banner: (body.article_banner) ? body.article_banner : "NA"
