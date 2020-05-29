@@ -46,7 +46,7 @@ const upload = multer({ storage })
 const fileService = (app: express.Application) => {
     const router = express.Router()
     router.get("/api/:version/file-service,", (req, res) => {
-        let version = req.params.version;
+        let version = req.params.version
         if (version == "v1") {
             res.send({ status: 200 })
         } else {
@@ -56,7 +56,7 @@ const fileService = (app: express.Application) => {
     })
 
     router.post("/api/:version/upload", upload.single("file"), function (req, res) {
-        let version = req.params.version;
+        let version = req.params.version
         if (version == "v1") {
             logger({ file: req.file }, Level.DEBUG)
             res.send({ success: true, file_name: req.file.filename, file_info: req.file })
@@ -93,7 +93,7 @@ const fileService = (app: express.Application) => {
         auth_middleware_wrapper_IS_LOGGED_IN,
         checkIfUserIsAdmin,
         (req, res) => {
-            let version = req.params.version;
+            let version = req.params.version
             if (version == "v1") {
                 const bucket = new GridFSBucket(storage.db)
                 bucket.delete(new ObjectID(req.params.id), err => {
@@ -120,7 +120,7 @@ const fileService = (app: express.Application) => {
         auth_middleware_wrapper_IS_LOGGED_IN,
         checkIfUserIsAdmin,
         (req, res) => {
-            let version = req.params.version;
+            let version = req.params.version
             if (version == "v1") {
                 const bucket = new GridFSBucket(storage.db)
                 let files = bucket.find({})

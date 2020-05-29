@@ -35,7 +35,7 @@ export const createCommunity = (req: Request, res: Response) => {
                 community_mode: (body.community_mode == null) ? 0 : body.community_mode,
                 users_list: [{
                     user_id: req.user.user_id,
-                    user_role: Role.MODERATOR,
+                    user_role: Role.ADMIN,
                     joined_on: ts
                 }]
             }

@@ -1,22 +1,26 @@
 // eslint-disable-next-line no-unused-vars
 import express, { Request, Response } from "express"
-
 import userController from "../../services/controllers/user_api_controller"
-
 import { auth_middleware_wrapper_IS_LOGGED_IN } from "../middleware/auth_middleware"
-
+import { responseMessageCreator } from "../../lib/response_message_creator"
 
 const userApiService = (app: express.Application) => {
     const router = express.Router()
 
     router.get("/api/:version/user-api-service", (req: Request, res: Response) => {
-        console.log("user api status")
-        res.send({ status: 200, success: true })
+        let version = req.params.version
+        if (version == "v1") {
+            res.send({ status: 200, success: true })
+        } else {
+            res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+        }
     })
 
     // router.get("/api/:version/")
     // Details
     router.get("/api/:version/getUserUsingId", userController.userDetailsController)
+
+    router.get("/api/:version/getUserByUsername/:username", userController.getUserByUsername)
 
     // Actions
     router.post("/api/:version/followUserUsingUid",

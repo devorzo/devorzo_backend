@@ -2,11 +2,17 @@ import express from "express"
 
 import { auth_middleware_wrapper_IS_LOGGED_IN, checkIfUserIsAdmin } from "../middleware/auth_middleware"
 import AdminController from "../controllers/admin_controller"
+import { responseMessageCreator } from "../../lib/response_message_creator"
 const adminApiService = (app: express.Application) => {
     const router = express.Router()
 
-    router.get("/admin-service,", (req, res) => {
-        res.send({ status: 200, success: true })
+    router.get("/api/:version/admin-service", (req, res) => {
+        let version = req.params.version
+        if (version == "v1") {
+            res.send({ status: 200, success: true })
+        } else {
+            res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+        }
     })
 
     router.post("/api/:version/getAllUsers",

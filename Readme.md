@@ -1,5 +1,4 @@
-# TypeScript Project Bootstrapper 
-A simple project template to get started with TypeScript projects quickly!
+# Lattice
 
 ------
 ### Install all Dependencies 

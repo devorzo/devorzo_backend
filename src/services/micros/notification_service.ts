@@ -1,14 +1,17 @@
 import express from "express"
-// import path from "path"
-// import _ from "lodash"
 import Notifications from "../controllers/notification_controller"
-
 import { auth_middleware_wrapper_IS_LOGGED_IN, checkIfUserIsAdmin } from "../middleware/auth_middleware"
+import { responseMessageCreator } from "../../lib/response_message_creator"
 const notificationApiService = (app: express.Application) => {
     const router = express.Router()
 
-    router.get("/notification-service", (req, res) => {
-        res.send({ status: 200, success: true })
+    router.get("/api/:version/notification-service", (req, res) => {
+        let version = req.params.version
+        if (version == "v1") {
+            res.send({ status: 200, success: true })
+        } else {
+            res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+        }
     })
 
     router.post("/api/:version/sendEmailVerificationEmail",

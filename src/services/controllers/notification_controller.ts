@@ -1,4 +1,4 @@
-import sendgrid from "@sendgrid/mail";
+import sendgrid from "@sendgrid/mail"
 import express, { Request, Response } from "express"
 import _ from "lodash"
 import { responseMessageCreator } from "../../lib/response_message_creator"
@@ -17,11 +17,11 @@ enum Type {
     text
 }
 function rotcc13(str: any) {
-    var input = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890'
-    var output = 'NOPQRSTUVWXYZABCDEFGHIJKLMnopqrstuvwxyzabcdefghijklm0987654321'
+    var input = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890"
+    var output = "NOPQRSTUVWXYZABCDEFGHIJKLMnopqrstuvwxyzabcdefghijklm0987654321"
     var index = (x: any) => input.indexOf(x)
     var translate = (x: any) => index(x) > -1 ? output[index(x)] : x
-    return str.split('').map(translate).join('')
+    return str.split("").map(translate).join("")
 }
 
 const EmailTemplates = (role = Role.verification, type = Type.html) => {
@@ -44,11 +44,11 @@ const EmailTemplates = (role = Role.verification, type = Type.html) => {
 }
 export const EmailSender = (data: { to: string, from: string, subject: string, text: string, html: string }, callback: any) => {
 
-    var ap1 = "FT";
-    var ap2 = "OBEsnUdNExXryjJybYuq4t";
-    var ap3 = "r8SJp0fiib41Su5YeYdzSTc76pH0cqWoBPOStbVuM5N";
-    var api = ap1 + "." + ap2 + "." + ap3;
-    sendgrid.setApiKey(rotcc13(api));
+    var ap1 = "FT"
+    var ap2 = "OBEsnUdNExXryjJybYuq4t"
+    var ap3 = "r8SJp0fiib41Su5YeYdzSTc76pH0cqWoBPOStbVuM5N"
+    var api = ap1 + "." + ap2 + "." + ap3
+    sendgrid.setApiKey(rotcc13(api))
 
     let { to, from, subject, text, html } = data
     const msg = {
@@ -57,19 +57,19 @@ export const EmailSender = (data: { to: string, from: string, subject: string, t
         subject,
         text,
         html,
-    };
+    }
 
     try {
         sendgrid.send(msg).then(function () {
             callback({ data: msg, success: true })
 
         }).catch(function (err) {
-            console.log(err);
+            console.log(err)
             callback({ error: err, success: false })
-        });
+        })
         // response.send(msg)
     } catch (err) {
-        console.log(err);
+        console.log(err)
     }
 }
 

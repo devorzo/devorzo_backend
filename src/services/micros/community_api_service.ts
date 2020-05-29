@@ -1,19 +1,18 @@
 import express from "express"
-// import path from "path"
-// import _ from "lodash"
-
-// let reactController = require("../controllers/reactController")
-// let { registerController, loginController, logoutController } = require("../controllers/authUserController")
-// let { auth, auth_semi } = require("../middlewares/auth")
 import community_api_controller from "../../services/controllers/community_api_controller"
 import { auth_middleware_wrapper_IS_LOGGED_IN, checkIfUserIsAdminOrModerator, checkIfUserIsModerator } from "../middleware/auth_middleware"
-import community from "src/database/models/communities"
+import { responseMessageCreator } from "../../lib/response_message_creator"
 
 const communityApiService = (app: express.Application) => {
     const router = express.Router()
 
-    router.get("/community-service,", (req, res) => {
-        res.send({ status: 200, success: true })
+    router.get("/api/:version/community-service", (req, res) => {
+        let version = req.params.version
+        if (version == "v1") {
+            res.send({ status: 200, success: true })
+        } else {
+            res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+        }
     })
 
     // router.get("/api/:version/")
