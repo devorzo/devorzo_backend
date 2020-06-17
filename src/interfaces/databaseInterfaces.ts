@@ -47,6 +47,7 @@ export interface IUser extends IUserDocument {
 
     removeAllVerificationToken(): any
     removeAllResetToken(): any
+    removeAllAuthToken(): any
 }
 
 export interface IUserModel extends Model<IUser> {
