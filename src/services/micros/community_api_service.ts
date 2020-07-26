@@ -1,6 +1,6 @@
 import express from "express"
 import community_api_controller from "../../services/controllers/community_api_controller"
-import { auth_middleware_wrapper_IS_LOGGED_IN, checkIfUserIsAdminOrModerator, checkIfUserIsModerator } from "../middleware/auth_middleware"
+import { auth_IS_LOGGED_IN, checkIfUserIsAdminOrModerator, checkIfUserIsModerator } from "../middleware/auth_middleware"
 import { responseMessageCreator } from "../../lib/response_message_creator"
 
 const communityApiService = (app: express.Application) => {
@@ -19,42 +19,42 @@ const communityApiService = (app: express.Application) => {
 
 
     router.post("/api/:version/createCommunity",
-        auth_middleware_wrapper_IS_LOGGED_IN,
+        auth_IS_LOGGED_IN,
         community_api_controller.createCommunity)
 
     router.get("/api/:version/getCommunityUsingId",
         community_api_controller.getCommunityUsingId)
 
     router.delete("/api/:version/removeCommunity",
-        auth_middleware_wrapper_IS_LOGGED_IN,
+        auth_IS_LOGGED_IN,
         checkIfUserIsAdminOrModerator,
         community_api_controller.deleteCommunity)
 
     router.post("/api/:version/addUserToPrivateCommunity",
-        auth_middleware_wrapper_IS_LOGGED_IN,
+        auth_IS_LOGGED_IN,
         checkIfUserIsModerator,
         community_api_controller.addUserToPrivateCommunity)
 
     router.post("/api/:version/removeUserFromCommunity",
-        auth_middleware_wrapper_IS_LOGGED_IN,
+        auth_IS_LOGGED_IN,
         checkIfUserIsModerator,
         community_api_controller.removeUserFromCommunity)
 
     router.post("/api/:version/followPublicCommunity",
-        auth_middleware_wrapper_IS_LOGGED_IN,
+        auth_IS_LOGGED_IN,
         community_api_controller.followPublicCommunity)
 
     router.post("/api/:version/unfollowCommunity",
-        auth_middleware_wrapper_IS_LOGGED_IN,
+        auth_IS_LOGGED_IN,
         community_api_controller.unfollowCommunity)
 
     router.post("/api/:version/addUserAsModerator",
-        auth_middleware_wrapper_IS_LOGGED_IN,
+        auth_IS_LOGGED_IN,
         checkIfUserIsModerator,
         community_api_controller.addUserAsModerator)
 
     router.post("/api/:version/changeCommunitySettings",
-        auth_middleware_wrapper_IS_LOGGED_IN,
+        auth_IS_LOGGED_IN,
         checkIfUserIsModerator,
         community_api_controller.modifyCommunitySettings)
     app.use(router)

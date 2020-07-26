@@ -4,15 +4,18 @@ import "../../database/models/article"
 
 // eslint-disable-next-line no-unused-vars
 import { Request, Response } from "express"
-import logger, { Level } from "../../lib/logger"
+import logger from "../../lib/logger"
 import { responseMessageCreator } from "../../lib/response_message_creator"
 import Article, { ArticleType } from "../../database/models/article"
 import { v4 } from "uuid"
 import User from "../../database/models/user"
 
 export enum CommunityArticleQuery {
+    // eslint-disable-next-line no-unused-vars
     LATEST,
+    // eslint-disable-next-line no-unused-vars
     FEATURED,
+    // eslint-disable-next-line no-unused-vars
     POPULAR
 }
 export const createArticle = (req: Request, res: Response) => {
@@ -160,10 +163,21 @@ export const getArticlesByUserId = (req: Request, res: Response) => {
                         //     profile_image_link: item.author_details[0].details.profile_image_link
                         // }
 
+                        let liked = false
+                        let user_id = req.query.user_id
+                        if (user_id != null && user_id != "") {
+                            if (d.likes && d.likes.length > 0)
+                                d.likes.forEach((i: any) => {
+                                    if (i.user_id == user_id) {
+                                        liked = true
+                                    }
+                                })
+                        }
                         d.likes = (d.likes) ? d.likes.length : 0
 
                         return {
-                            ...d
+                            ...d,
+                            liked
                         }
                     })
 
@@ -184,9 +198,12 @@ export const getArticlesByUsername = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1") {
 
-        let body = _.pick(req.body, ["username", "page", "limit"])
+        let user_id = req.query.user_id
+        let body: any = _.pick(req.params, ["username", "page", "limit"])
+        body.page = parseInt(body.page)
+        body.limit = parseInt(body.limit)
 
-        body.username = req.params.username
+        // body.username = req.params.username
         if (body.username == null) {
             res.status(400).send(responseMessageCreator("Invalid username", 0))
         } else {
@@ -212,6 +229,19 @@ export const getArticlesByUsername = (req: Request, res: Response) => {
                     query.push({ $limit: +body.limit })
                     query.push({ $sort: { _id: -1 } })
 
+                    if (user_id != null && user_id != "")
+                        query.push({
+                            $lookup: {
+                                from: "users",
+                                pipeline: [{
+                                    "$match": {
+                                        "user_id": req.query.user_id,
+                                    },
+
+                                }],
+                                as: "person_details"
+                            }
+                        })
 
                     Article.aggregate(query).then((result: any) => {
                         if (result) {
@@ -229,6 +259,7 @@ export const getArticlesByUsername = (req: Request, res: Response) => {
                                     "preview",
                                     "likes",
                                     "tags",
+                                    "person_details"
                                 ])
 
                                 // let author_details = {
@@ -238,10 +269,32 @@ export const getArticlesByUsername = (req: Request, res: Response) => {
                                 //     profile_image_link: item.author_details[0].details.profile_image_link
                                 // }
 
+                                let liked = false
+                                let bookmarked = false
+
+                                if (user_id != null && user_id != "") {
+                                    if (d.likes && d.likes.length > 0)
+                                        d.likes.forEach((i: any) => {
+                                            if (i.user_id == user_id) {
+                                                liked = true
+                                            }
+                                        })
+
+                                    if (d.person_details)
+                                        d.person_details[0].bookmarks.forEach((i: any) => {
+                                            if (i.article_id == d.article_id) {
+                                                bookmarked = true
+                                            }
+                                        })
+                                }
                                 d.likes = (d.likes) ? d.likes.length : 0
 
+                                delete d.person_details
+                                
                                 return {
-                                    ...d
+                                    ...d,
+                                    liked,
+                                    bookmarked
                                 }
                             })
 
@@ -274,7 +327,11 @@ export const getLatestArticle = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1") {
 
-        let body = _.pick(req.body, ["page", "limit"])
+        let user_id = req.query.user_id
+        let body: any = _.pick(req.params, ["page", "limit"])
+        body.page = parseInt(body.page)
+        body.limit = parseInt(body.limit)
+
         if (body.page == null || isNaN(body.page)) {
             body.page = 0
         }
@@ -293,10 +350,22 @@ export const getLatestArticle = (req: Request, res: Response) => {
                     foreignField: "user_id",
                     as: "author_details"
                 }
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    pipeline: [{
+                        "$match": {
+                            "user_id": user_id,
+                            // "bookmarks.article_id": "$CURRENT.article_id"
+                        },
+
+                    }],
+                    as: "person_details"
+                }
             }
         ]).then((doc: any) => {
             if (doc) {
-
                 // console.log(doc)
                 if (doc.length > 0) {
                     doc = doc.map((item: any) => {
@@ -313,6 +382,7 @@ export const getLatestArticle = (req: Request, res: Response) => {
                             "preview",
                             "likes",
                             "tags",
+                            "person_details"
                         ])
 
                         let author_details = {
@@ -322,10 +392,30 @@ export const getLatestArticle = (req: Request, res: Response) => {
                             profile_image_link: item.author_details[0].details.profile_image_link
                         }
 
-                        d.likes = (d.likes) ? d.likes.length : 0
+                        let liked = false
+                        let bookmarked = false
+                        if (user_id != null && user_id != "") {
+                            if (d.likes && d.likes.length > 0)
+                                d.likes.forEach((i: any) => {
+                                    if (i.user_id == user_id) {
+                                        liked = true
+                                    }
+                                })
 
+                            d.person_details[0].bookmarks.forEach((i: any) => {
+                                if (i.article_id == d.article_id) {
+                                    bookmarked = true
+                                }
+                            })
+                        }
+
+                        delete d.person_details
+
+                        d.likes = (d.likes) ? d.likes.length : 0
                         return {
                             ...d,
+                            liked,
+                            bookmarked,
                             author_details
                         }
                     })
@@ -348,7 +438,11 @@ export const getPopularArticle = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1") {
 
-        let body = _.pick(req.body, ["page", "limit"])
+        let user_id = req.query.user_id
+        let body: any = _.pick(req.params, ["page", "limit"])
+        body.page = parseInt(body.page)
+        body.limit = parseInt(body.limit)
+
         if (body.page == null || isNaN(body.page)) {
             body.page = 0
         }
@@ -367,6 +461,19 @@ export const getPopularArticle = (req: Request, res: Response) => {
                     foreignField: "user_id",
                     as: "author_details"
                 }
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    pipeline: [{
+                        "$match": {
+                            "user_id": user_id,
+                            // "bookmarks.article_id": "$CURRENT.article_id"
+                        },
+
+                    }],
+                    as: "person_details"
+                }
             }
         ]).then((doc: any) => {
             if (doc) {
@@ -374,6 +481,7 @@ export const getPopularArticle = (req: Request, res: Response) => {
                 // console.log(doc)
                 if (doc.length > 0) {
                     doc = doc.map((item: any) => {
+
 
                         let d = _.pick(item, ["created_on",
                             "article_id",
@@ -387,6 +495,7 @@ export const getPopularArticle = (req: Request, res: Response) => {
                             "preview",
                             "likes",
                             "tags",
+                            "person_details"
                         ])
 
                         let author_details = {
@@ -396,10 +505,30 @@ export const getPopularArticle = (req: Request, res: Response) => {
                             profile_image_link: item.author_details[0].details.profile_image_link
                         }
 
-                        d.likes = (d.likes) ? d.likes.length : 0
+                        let liked = false
+                        let bookmarked = false
+                        if (user_id != null && user_id != "") {
+                            if (d.likes && d.likes.length > 0)
+                                d.likes.forEach((i: any) => {
+                                    if (i.user_id == user_id) {
+                                        liked = true
+                                    }
+                                })
 
+                            d.person_details[0].bookmarks.forEach((i: any) => {
+                                if (i.article_id == d.article_id) {
+                                    bookmarked = true
+                                }
+                            })
+                        }
+
+                        delete d.person_details
+
+                        d.likes = (d.likes) ? d.likes.length : 0
                         return {
                             ...d,
+                            liked,
+                            bookmarked,
                             author_details
                         }
                     })
@@ -422,7 +551,11 @@ export const getFeaturedArticle = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1") {
 
-        let body = _.pick(req.body, ["page", "limit"])
+        let user_id = req.query.user_id
+        let body: any = _.pick(req.params, ["page", "limit"])
+        body.page = parseInt(body.page)
+        body.limit = parseInt(body.limit)
+
         if (body.page == null || isNaN(body.page)) {
             body.page = 0
         }
@@ -441,6 +574,19 @@ export const getFeaturedArticle = (req: Request, res: Response) => {
                     localField: "author_id",
                     foreignField: "user_id",
                     as: "author_details"
+                }
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    pipeline: [{
+                        "$match": {
+                            "user_id": user_id,
+                            // "bookmarks.article_id": "$CURRENT.article_id"
+                        },
+
+                    }],
+                    as: "person_details"
                 }
             }
         ]).then((doc: any) => {
@@ -462,6 +608,7 @@ export const getFeaturedArticle = (req: Request, res: Response) => {
                             "preview",
                             "likes",
                             "tags",
+                            "person_details"
                         ])
 
                         let author_details = {
@@ -471,10 +618,30 @@ export const getFeaturedArticle = (req: Request, res: Response) => {
                             profile_image_link: item.author_details[0].details.profile_image_link
                         }
 
-                        d.likes = (d.likes) ? d.likes.length : 0
+                        let liked = false
+                        let bookmarked = false
+                        if (user_id != null && user_id != "") {
+                            if (d.likes && d.likes.length > 0)
+                                d.likes.forEach((i: any) => {
+                                    if (i.user_id == user_id) {
+                                        liked = true
+                                    }
+                                })
 
+                            d.person_details[0].bookmarks.forEach((i: any) => {
+                                if (i.article_id == d.article_id) {
+                                    bookmarked = true
+                                }
+                            })
+                        }
+
+                        delete d.person_details
+
+                        d.likes = (d.likes) ? d.likes.length : 0
                         return {
                             ...d,
+                            liked,
+                            bookmarked,
                             author_details
                         }
                     })
@@ -568,10 +735,21 @@ export const getArticleByCommunityId = (req: Request, res: Response) => {
                             profile_image_link: item.author_details[0].details.profile_image_link
                         }
 
+                        let liked = false
+                        let user_id = req.query.user_id
+                        if (user_id != null && user_id != "") {
+                            if (d.likes && d.likes.length > 0)
+                                d.likes.forEach((i: any) => {
+                                    if (i.user_id == user_id) {
+                                        liked = true
+                                    }
+                                })
+                        }
                         d.likes = (d.likes) ? d.likes.length : 0
 
                         return {
                             ...d,
+                            liked,
                             author_details
                         }
                     })
@@ -668,10 +846,12 @@ export const deleteArticleById = (req: Request, res: Response) => {
             res.send(responseMessageCreator("Invalid article id", 0))
         } else {
             Article.exists({
-                article_id: body.article_id
-            }).then((doc: any) => {
+                article_id: body.article_id,
+                author_id: req.user.user_id
+            }).then((doc: boolean) => {
                 if (doc) {
-                    if (doc.author_id == req.user.user_id) {
+                    // console.log({ doc })
+                    if (doc == true) {
                         Article.deleteOne({
                             article_id: body.article_id
                         }).then((d) => {
@@ -713,7 +893,7 @@ export const deleteAllUserArticleByUserId = (req: Request, res: Response) => {
                             if (doc) {
                                 res.send(responseMessageCreator("Successfully deleted all articles", 1))
                             } else {
-
+                                res.send(responseMessageCreator("Error occured", 0))
                             }
                         }).catch((e) => {
                             res.status(400).send(responseMessageCreator(e, 0))

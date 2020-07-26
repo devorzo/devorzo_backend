@@ -1,6 +1,6 @@
 import express from "express"
 
-import { auth_middleware_wrapper_IS_LOGGED_IN, checkIfUserIsAdmin } from "../middleware/auth_middleware"
+import { auth_IS_LOGGED_IN, checkIfUserIsAdmin } from "../middleware/auth_middleware"
 import AdminController from "../controllers/admin_controller"
 import { responseMessageCreator } from "../../lib/response_message_creator"
 const adminApiService = (app: express.Application) => {
@@ -16,22 +16,22 @@ const adminApiService = (app: express.Application) => {
     })
 
     router.post("/api/:version/getAllUsers",
-        auth_middleware_wrapper_IS_LOGGED_IN,
+        auth_IS_LOGGED_IN,
         checkIfUserIsAdmin,
         AdminController.getAllUsers)
 
     router.post("/api/:version/getAllInviteRequests",
-        auth_middleware_wrapper_IS_LOGGED_IN,
+        auth_IS_LOGGED_IN,
         checkIfUserIsAdmin,
         AdminController.getAllInviteRequests)
 
     router.post("/api/:version/getAllRejectedRequests",
-        auth_middleware_wrapper_IS_LOGGED_IN,
+        auth_IS_LOGGED_IN,
         checkIfUserIsAdmin,
         AdminController.getAllRejectedRequests)
 
     router.post("/api/:version/rejectInviteRequest",
-        auth_middleware_wrapper_IS_LOGGED_IN,
+        auth_IS_LOGGED_IN,
         checkIfUserIsAdmin,
         AdminController.rejectInviteRequest)
 

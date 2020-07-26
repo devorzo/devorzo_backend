@@ -45,7 +45,7 @@ export const getUserByUsername = (req: Request, res: Response) => {
         //     res.status(400).send(responseMessageCreator("Invalid user id", 0))
         // }
 
-        console.log({params: req.params})
+        console.log({ params: req.params })
         User.findOne({
             "details.username": req.params.username
         }).then((doc) => {
@@ -328,10 +328,10 @@ export const updateUserSetting = (req: Request, res: Response) => {
     }
 }
 
-export const addToBookmark = (req: Request, res: Response) => {
+export const likeArticle = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1") {
-        let body = _.pick(req.body, ["article_id"])
+        let body = _.pick(req.body, ["article_id", "action"])
 
         if (body.article_id == null) {
             res.status(400).send(responseMessageCreator("Invalid article id", 0))
@@ -340,31 +340,133 @@ export const addToBookmark = (req: Request, res: Response) => {
                 article_id: body.article_id
             }).then((status) => {
                 if (status) {
-                    User.exists({
-                        user_id: req.user.user_id,
-                        "bookmarks.article_id": body.article_id
-                    }).then((doc) => {
-                        if (doc) {
-                            res.send(responseMessageCreator("The article is already bookmarked", 0))
-                        } else {
-                            User.findOneAndUpdate({
-                                user_id: req.user.user_id
-                            }, {
-                                $push: {
-                                    bookmarks: {
-                                        article_id: body.article_id,
-                                        bookmarked_on: Date.now()
+
+                    if (body.action == "like" || body.action == 1) {
+                        Article.exists({
+                            article_id: body.article_id,
+                            "likes.user_id": req.user.user_id
+                        }).then((isLiked) => {
+                            if (!isLiked) {
+                                Article.findOneAndUpdate({
+                                    article_id: body.article_id
+                                }, {
+                                    $push: {
+                                        likes: {
+                                            user_id: req.user.user_id,
+                                            liked_on: Date.now()
+                                        }
                                     }
+                                }).then((doc2) => {
+                                    if (doc2) {
+                                        console.log("liked")
+                                        res.send(responseMessageCreator("The article has been liked!"))
+                                    } else {
+                                        res.send(responseMessageCreator("Some error occured", 0))
+                                    }
+                                })
+                            } else {
+                                res.send(responseMessageCreator("The article has already been liked!", 0))
+                            }
+                        })
+
+                    } else {
+                        Article.findOneAndUpdate({
+                            article_id: body.article_id
+                        }, {
+                            $pull: {
+                                likes: {
+                                    user_id: req.user.user_id,
                                 }
-                            }).then((doc2) => {
-                                if (doc2) {
-                                    res.send(responseMessageCreator("The article has been successfully bookmarked"))
-                                } else {
-                                    res.send(responseMessageCreator("Some error occured", 0))
-                                }
-                            })
-                        }
-                    })
+                            }
+                        }).then((doc2) => {
+                            if (doc2) {
+                                console.log("disliked")
+                                res.send(responseMessageCreator("Unliked article!"))
+                            } else {
+                                res.send(responseMessageCreator("Some error occured", 0))
+                            }
+                        })
+                    }
+
+
+
+
+                } else {
+                    res.status(400).send(responseMessageCreator("Invalid article id", 0))
+                }
+            })
+        }
+    } else {
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+
+export const bookmarkArticle = (req: Request, res: Response) => {
+    let version = req.params.version
+    if (version == "v1") {
+        let body = _.pick(req.body, ["article_id", "action"])
+
+        if (body.article_id == null) {
+            res.status(400).send(responseMessageCreator("Invalid article id", 0))
+        } else {
+            Article.exists({
+                article_id: body.article_id
+            }).then((status) => {
+                if (status) {
+
+                    if (body.action == "bookmark" || body.action == 1) {
+                        User.exists({
+                            user_id: req.user.user_id,
+                            "bookmarks.article_id": body.article_id
+                        }).then((doc) => {
+                            if (doc) {
+                                res.send(responseMessageCreator("The article is already bookmarked", 0))
+                            } else {
+                                User.findOneAndUpdate({
+                                    user_id: req.user.user_id
+                                }, {
+                                    $push: {
+                                        bookmarks: {
+                                            article_id: body.article_id,
+                                            bookmarked_on: Date.now()
+                                        }
+                                    }
+                                }).then((doc2) => {
+                                    if (doc2) {
+                                        res.send(responseMessageCreator("The article has been successfully bookmarked"))
+                                    } else {
+                                        res.send(responseMessageCreator("Some error occured", 0))
+                                    }
+                                })
+                            }
+                        })
+                    } else {
+                        User.exists({
+                            user_id: req.user.user_id,
+                            "bookmarks.article_id": body.article_id
+                        }).then((doc) => {
+                            if (!doc) {
+                                res.send(responseMessageCreator("Article is not bookmarked", 0))
+                            } else {
+                                User.findOneAndUpdate({
+                                    user_id: req.user.user_id
+                                }, {
+                                    $pull: {
+                                        bookmarks: {
+                                            article_id: body.article_id,
+                                        }
+                                    }
+                                }).then((doc2) => {
+                                    if (doc2) {
+                                        res.send(responseMessageCreator("The article has been successfully removed from bookmark"))
+                                    } else {
+                                        res.send(responseMessageCreator("Some error occured", 0))
+                                    }
+                                })
+                            }
+                        })
+                    }
+
 
                 } else {
                     res.status(400).send(responseMessageCreator("Invalid article id", 0))
@@ -395,53 +497,6 @@ export const getAllUserBookmarks = (req: Request, res: Response) => {
             } else
                 res.send(responseMessageCreator("Some error occured", 0))
         })
-    } else {
-        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
-    }
-}
-
-export const removeArticleFromBookmark = (req: Request, res: Response) => {
-    let version = req.params.version
-    if (version == "v1") {
-        let body = _.pick(req.body, ["article_id"])
-
-        if (body.article_id == null) {
-            res.status(400).send(responseMessageCreator("Invalid article id", 0))
-        } else {
-            Article.exists({
-                article_id: body.article_id
-            }).then((status) => {
-                if (status) {
-                    User.exists({
-                        user_id: req.user.user_id,
-                        "bookmarks.article_id": body.article_id
-                    }).then((doc) => {
-                        if (!doc) {
-                            res.send(responseMessageCreator("Article is not bookmarked", 0))
-                        } else {
-                            User.findOneAndUpdate({
-                                user_id: req.user.user_id
-                            }, {
-                                $pull: {
-                                    bookmarks: {
-                                        article_id: body.article_id,
-                                    }
-                                }
-                            }).then((doc2) => {
-                                if (doc2) {
-                                    res.send(responseMessageCreator("The article has been successfully removed from bookmark"))
-                                } else {
-                                    res.send(responseMessageCreator("Some error occured", 0))
-                                }
-                            })
-                        }
-                    })
-
-                } else {
-                    res.status(400).send(responseMessageCreator("Invalid article id", 0))
-                }
-            })
-        }
     } else {
         res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
     }
@@ -633,10 +688,11 @@ export default {
 
     updateUserSetting,
 
-    addToBookmark,
+    likeArticle,
+
+    bookmarkArticle,
     getAllUserBookmarks,
     removeAllUserBookmarks,
-    removeArticleFromBookmark,
 
     addToHistory,
     getCompleteHistory,

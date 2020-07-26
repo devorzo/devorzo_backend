@@ -146,11 +146,11 @@ export const checkIfUserIsModerator = (req: Request, res: Response, next: NextFu
     }
 }
 
-export const auth_middleware_wrapper_IS_LOGGED_IN = (req: Request, res: Response, next: NextFunction) => {
+export const auth_IS_LOGGED_IN = (req: Request, res: Response, next: NextFunction) => {
     auth_middleware(req! as Request, res! as Response, next, Auth.IS_LOGGED_IN)
 }
 
-export const auth_middleware_wrapper_IS_LOGGED_OUT = (req: Request, res: Response, next: NextFunction) => {
+export const auth_IS_LOGGED_OUT = (req: Request, res: Response, next: NextFunction) => {
     auth_middleware(req! as Request, res! as Response, next, Auth.IS_LOGGED_OUT)
 }
 

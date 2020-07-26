@@ -10,7 +10,7 @@ import GridFSStorage from "multer-gridfs-storage"
 import logger, { Level } from "../../lib/logger"
 // logger({ monogo: process.env.MONGODB_URI })
 
-import { auth_middleware_wrapper_IS_LOGGED_IN, checkIfUserIsAdmin } from "../middleware/auth_middleware"
+import { auth_IS_LOGGED_IN, checkIfUserIsAdmin } from "../middleware/auth_middleware"
 import { responseMessageCreator } from "../../lib/response_message_creator"
 let opts: GridFSStorage.UrlStorageOptions
 opts = {
@@ -90,7 +90,7 @@ const fileService = (app: express.Application) => {
     })
 
     router.delete("/api/:version/del/:id",
-        auth_middleware_wrapper_IS_LOGGED_IN,
+        auth_IS_LOGGED_IN,
         checkIfUserIsAdmin,
         (req, res) => {
             let version = req.params.version
@@ -117,7 +117,7 @@ const fileService = (app: express.Application) => {
         })
 
     router.get("/api/:version/getAllFiles",
-        auth_middleware_wrapper_IS_LOGGED_IN,
+        auth_IS_LOGGED_IN,
         checkIfUserIsAdmin,
         (req, res) => {
             let version = req.params.version
