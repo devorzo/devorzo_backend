@@ -47,6 +47,7 @@ export interface IUser extends IUserDocument {
 
     removeAllVerificationToken(): any
     removeAllResetToken(): any
+    removeAllAuthToken(): any
 }
 
 export interface IUserModel extends Model<IUser> {
@@ -88,12 +89,15 @@ export interface IArticleDocument extends Document {
 
     author_id: string;
     article_id: string;
-
+    article_banner: string;
     views: number;
 
+    article_type: number;
+    
     community_id: string;
     belongs_to_community: number; //0|1
 
+    
     moderation_status: number; //0|1
 
     //change later

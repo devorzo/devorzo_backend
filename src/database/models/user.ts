@@ -221,6 +221,16 @@ UserSchema.methods.removeAllResetToken = function () {
     })
 }
 
+UserSchema.methods.removeAllAuthToken = function () {
+    let user = this
+
+    return user.updateOne({
+        $pull: {
+            tokens: { access: "auth" }
+        }
+    })
+}
+
 UserSchema.statics.removeAuthToken = function (token: any) {
     let user = this
 

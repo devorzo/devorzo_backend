@@ -7,15 +7,15 @@ export const cleanObject = (obj: any) => {
     //     }
     // }
 
-    const newObj: any = {};
+    const newObj: any = {}
 
     Object.keys(obj).forEach(key => {
         if (obj[key] && typeof obj[key] === "object") {
-            newObj[key] = cleanObject(obj[key]); // recurse
+            newObj[key] = cleanObject(obj[key]) // recurse
         } else if (obj[key] != null) {
-            newObj[key] = obj[key]; // copy value
+            newObj[key] = obj[key] // copy value
         }
-    });
+    })
 
-    return newObj;
+    return newObj
 }

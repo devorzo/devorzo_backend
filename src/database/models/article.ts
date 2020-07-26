@@ -8,6 +8,15 @@ export enum BooleanFlag {
     YES,
     NOT_DECIDED = -1
 }
+
+export enum ArticleType {
+    NORMAL,
+    FEATURED
+}
+export const randNum = (min: number, max: number) => {
+    let random = Math.round(Math.random() * (+max - +min) + +min)
+    return random
+}
 const ArticleSchema: Schema = new Schema({
     title: {
         type: String,
@@ -47,6 +56,7 @@ const ArticleSchema: Schema = new Schema({
         type: String,
         required: true,
         default: `article.${v4()}`,
+        unique: true,
         minlength: 1,
         trim: true
     },
@@ -56,11 +66,21 @@ const ArticleSchema: Schema = new Schema({
         minlength: 1,
         trim: true
     },
-
+    article_banner: {
+        type: String,
+        default: `https://i.picsum.photos/id/${randNum(0, 1084)}/1200/200.jpg`,
+        required: true,
+        trim: true,
+        minlength: 1
+    },
     views: {
         type: Number,
         default: 0,
         required: true
+    },
+
+    article_type: {
+        type: Number
     },
 
     community_id: {

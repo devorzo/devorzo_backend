@@ -10,7 +10,7 @@ import GridFSStorage from "multer-gridfs-storage"
 import logger, { Level } from "../../lib/logger"
 // logger({ monogo: process.env.MONGODB_URI })
 
-import { auth_middleware_wrapper_IS_LOGGED_IN, checkIfUserIsAdmin } from "../middleware/auth_middleware"
+import { auth_IS_LOGGED_IN, checkIfUserIsAdmin } from "../middleware/auth_middleware"
 import { responseMessageCreator } from "../../lib/response_message_creator"
 let opts: GridFSStorage.UrlStorageOptions
 opts = {
@@ -46,7 +46,7 @@ const upload = multer({ storage })
 const fileService = (app: express.Application) => {
     const router = express.Router()
     router.get("/api/:version/file-service,", (req, res) => {
-        let version = req.params.version;
+        let version = req.params.version
         if (version == "v1") {
             res.send({ status: 200 })
         } else {
@@ -56,7 +56,7 @@ const fileService = (app: express.Application) => {
     })
 
     router.post("/api/:version/upload", upload.single("file"), function (req, res) {
-        let version = req.params.version;
+        let version = req.params.version
         if (version == "v1") {
             logger({ file: req.file }, Level.DEBUG)
             res.send({ success: true, file_name: req.file.filename, file_info: req.file })
@@ -90,10 +90,10 @@ const fileService = (app: express.Application) => {
     })
 
     router.delete("/api/:version/del/:id",
-        auth_middleware_wrapper_IS_LOGGED_IN,
+        auth_IS_LOGGED_IN,
         checkIfUserIsAdmin,
         (req, res) => {
-            let version = req.params.version;
+            let version = req.params.version
             if (version == "v1") {
                 const bucket = new GridFSBucket(storage.db)
                 bucket.delete(new ObjectID(req.params.id), err => {
@@ -117,10 +117,10 @@ const fileService = (app: express.Application) => {
         })
 
     router.get("/api/:version/getAllFiles",
-        auth_middleware_wrapper_IS_LOGGED_IN,
+        auth_IS_LOGGED_IN,
         checkIfUserIsAdmin,
         (req, res) => {
-            let version = req.params.version;
+            let version = req.params.version
             if (version == "v1") {
                 const bucket = new GridFSBucket(storage.db)
                 let files = bucket.find({})

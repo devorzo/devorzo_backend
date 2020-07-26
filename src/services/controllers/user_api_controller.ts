@@ -29,7 +29,33 @@ export const userDetailsController = (req: Request, res: Response) => {
                 d = doc.toJSON()
             res.send(responseMessageCreator(d))
         }).catch((e) => {
-            res.status(400).send(responseMessageCreator(0, e))
+            res.status(400).send(responseMessageCreator(e, 0))
+        })
+    } else {
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+
+export const getUserByUsername = (req: Request, res: Response) => {
+    let version = req.params.version
+
+    if (version == "v1") {
+        // logger({ body }, Level.INFO)
+        // if (body.id == null || body.id == undefined) {
+        //     res.status(400).send(responseMessageCreator("Invalid user id", 0))
+        // }
+
+        console.log({ params: req.params })
+        User.findOne({
+            "details.username": req.params.username
+        }).then((doc) => {
+            if (doc) {
+                res.send(responseMessageCreator({ data: doc.toJSON() }))
+            } else {
+                res.status(400).send(responseMessageCreator("Invalid username", 0))
+            }
+        }).catch((e) => {
+            res.status(400).send(responseMessageCreator(e, 0))
         })
     } else {
         res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
@@ -39,39 +65,27 @@ export const userDetailsController = (req: Request, res: Response) => {
 export const followUserUsingId = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1") {
-        let body = _.pick(req.body, ["follower_id", "user_token"])
-
-        let decoded: any = null
-        if (req.session) {
-            if (req.session.logged == true) {
-                decoded = req.session.user_id
-            }
-        }
-        if (decoded == null) {
-            decoded = jwt.decode(body.user_token, { complete: true })
-            decoded = decoded.user_id
-        }
-
-        if (decoded == null) {
-            res.status(400).send(responseMessageCreator("Invalid or empty token.", 0))
-        }
-
-        Followers.findOneAndUpdate({
-            user_id: decoded
-        }, {
-            $push: {
-                followers: {
-                    follower_id: body.follower_id,
-                    followed_on: Date.now()
+        let body = _.pick(req.body, ["user_id"])
+        if (body.user_id == null) {
+            res.send(responseMessageCreator("Invalid user id", 0))
+        } else {
+            Followers.findOneAndUpdate({
+                user_id: body.user_id
+            }, {
+                $push: {
+                    followers: {
+                        follower_id: req.user.user_id,
+                        followed_on: Date.now()
+                    }
                 }
-            }
-        }, function (err, doc) {
-            if (!err) {
-                res.send(responseMessageCreator(doc))
-            } else {
-                res.status(400).send(responseMessageCreator({ err, doc }, 0))
-            }
-        })
+            }, function (err, doc) {
+                if (!err) {
+                    res.send(responseMessageCreator(doc))
+                } else {
+                    res.status(400).send(responseMessageCreator({ err, doc }, 0))
+                }
+            })
+        }
     } else {
         res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
     }
@@ -81,38 +95,27 @@ export const followUserUsingId = (req: Request, res: Response) => {
 export const unfollowUserUsingId = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1") {
-        let body = _.pick(req.body, ["follower_id", "user_token"])
+        let body = _.pick(req.body, ["user_id"])
 
-        let decoded: any = null
-        if (req.session) {
-            if (req.session.logged == true) {
-                decoded = req.session.user_id
-            }
-        }
-        if (decoded == null) {
-            decoded = jwt.decode(body.user_token, { complete: true })
-            decoded = decoded.user_id
-        }
-
-        if (decoded == null) {
-            res.status(400).send(responseMessageCreator("Invalid or empty token.", 0))
-        }
-
-        Followers.findOneAndUpdate({
-            user_id: decoded
-        }, {
-            $pull: {
-                followers: {
-                    follower_id: body.follower_id
+        if (body.user_id == null) {
+            res.send(responseMessageCreator("Invalid user id", 0))
+        } else {
+            Followers.findOneAndUpdate({
+                user_id: body.user_id
+            }, {
+                $pull: {
+                    followers: {
+                        follower_id: req.user.user_id
+                    }
                 }
-            }
-        }, function (err, doc) {
-            if (!err) {
-                res.send(responseMessageCreator(doc))
-            } else {
-                res.status(400).send(responseMessageCreator({ err, doc }, 0))
-            }
-        })
+            }, function (err, doc) {
+                if (!err) {
+                    res.send(responseMessageCreator(doc))
+                } else {
+                    res.status(400).send(responseMessageCreator({ err, doc }, 0))
+                }
+            })
+        }
     } else {
         res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
     }
@@ -121,34 +124,24 @@ export const unfollowUserUsingId = (req: Request, res: Response) => {
 export const getAllUserFollowers = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1") {
-        let body = _.pick(req.body, ["user_token"])
-        let decoded: any = null
-        if (req.session) {
-            if (req.session.logged == true) {
-                decoded = req.session.user_id
-            }
-        }
-        if (decoded == null) {
-            decoded = jwt.decode(body.user_token, { complete: true })
-            decoded = decoded.user_id
-        }
+        let body = _.pick(req.body, ["user_id"])
 
-        if (decoded == null) {
-            res.status(400).send(responseMessageCreator("Invalid or empty token.", 0))
+        if (body.user_id == null) {
+            res.send(responseMessageCreator("Invalid user id", 0))
+        } else {
+            Followers.findOne({
+                user_id: body.user_id
+            }, function (err, doc) {
+                if (!err) {
+
+                    let count = doc?.followers.length
+                    let followers = doc?.followers
+                    res.send(responseMessageCreator({ count, followers }))
+                } else {
+                    res.status(400).send(responseMessageCreator({ err, doc }, 0))
+                }
+            })
         }
-
-        Followers.findOne({
-            user_id: decoded
-        }, function (err, doc) {
-            if (!err) {
-
-                let count = doc?.followers.length
-                let followers = doc?.followers
-                res.send(responseMessageCreator({ count, followers }))
-            } else {
-                res.status(400).send(responseMessageCreator({ err, doc }, 0))
-            }
-        })
     } else {
         res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
     }
@@ -158,24 +151,8 @@ export const getAllUserFollowers = (req: Request, res: Response) => {
 export const getAllPeopleUserFollows = (req: Request, res: Response) => {
     let version = req.params.version
     if (version == "v1") {
-        let body = _.pick(req.body, ["user_token"])
 
-        let decoded: any = null
-        if (req.session) {
-            if (req.session.logged == true) {
-                decoded = req.session.user_id
-            }
-        }
-        if (decoded == null) {
-            decoded = jwt.decode(body.user_token, { complete: true })
-            decoded = decoded.user_id
-        }
-
-        if (decoded == null) {
-            res.status(400).send(responseMessageCreator("Invalid or empty token.", 0))
-        }
-
-        let follower_id: string = decoded
+        let follower_id: string = req.user.user_id
         Followers.find({
             followers: {
                 $elemMatch: {
@@ -307,23 +284,23 @@ export const getUserArticlesUsingId = (req: Request, res: Response) => {
 }
 
 export const updateUserSetting = (req: Request, res: Response) => {
-    let version = req.params.version;
+    let version = req.params.version
     if (version == "v1") {
         let body = _.pick(req.body, ["fullname", "user_bio", "gender", "profile_image_link"])
 
-        let data: any = {}
+        let data: any = new Object()
         body = cleanObject(body)
         console.log({ body })
 
         Object.entries(body).forEach(([key, value]) => {
             data[`details.${key}`] = value
-        });
+        })
 
         console.log({ data })
         if (!(Object.keys(body).length === 0)) {
 
             if (Object.keys(body).length === 4 || req.body.initialiseUser == 1) {
-                data['account_initialised'] = 1
+                data["account_initialised"] = 1
             }
             User.findOneAndUpdate({
                 user_id: req.user.user_id
@@ -334,7 +311,10 @@ export const updateUserSetting = (req: Request, res: Response) => {
             }, {
                 new: true
             }).then((doc) => {
-                res.send(responseMessageCreator({ doc }, 1))
+                if (doc)
+                    res.send(responseMessageCreator({ user: doc.toJSON() }, 1))
+                else
+                    res.send(responseMessageCreator("Some error occured", 0))
             }).catch((e) => {
                 res.status(400).send(responseMessageCreator({ e }, 0))
             })
@@ -348,10 +328,10 @@ export const updateUserSetting = (req: Request, res: Response) => {
     }
 }
 
-export const addToBookmark = (req: Request, res: Response) => {
-    let version = req.params.version;
+export const likeArticle = (req: Request, res: Response) => {
+    let version = req.params.version
     if (version == "v1") {
-        let body = _.pick(req.body, ["article_id"])
+        let body = _.pick(req.body, ["article_id", "action"])
 
         if (body.article_id == null) {
             res.status(400).send(responseMessageCreator("Invalid article id", 0))
@@ -360,31 +340,133 @@ export const addToBookmark = (req: Request, res: Response) => {
                 article_id: body.article_id
             }).then((status) => {
                 if (status) {
-                    User.exists({
-                        user_id: req.user.user_id,
-                        "bookmarks.article_id": body.article_id
-                    }).then((doc) => {
-                        if (doc) {
-                            res.send(responseMessageCreator("The article is already bookmarked", 0))
-                        } else {
-                            User.findOneAndUpdate({
-                                user_id: req.user.user_id
-                            }, {
-                                $push: {
-                                    bookmarks: {
-                                        article_id: body.article_id,
-                                        bookmarked_on: Date.now()
+
+                    if (body.action == "like" || body.action == 1) {
+                        Article.exists({
+                            article_id: body.article_id,
+                            "likes.user_id": req.user.user_id
+                        }).then((isLiked) => {
+                            if (!isLiked) {
+                                Article.findOneAndUpdate({
+                                    article_id: body.article_id
+                                }, {
+                                    $push: {
+                                        likes: {
+                                            user_id: req.user.user_id,
+                                            liked_on: Date.now()
+                                        }
                                     }
+                                }).then((doc2) => {
+                                    if (doc2) {
+                                        console.log("liked")
+                                        res.send(responseMessageCreator("The article has been liked!"))
+                                    } else {
+                                        res.send(responseMessageCreator("Some error occured", 0))
+                                    }
+                                })
+                            } else {
+                                res.send(responseMessageCreator("The article has already been liked!", 0))
+                            }
+                        })
+
+                    } else {
+                        Article.findOneAndUpdate({
+                            article_id: body.article_id
+                        }, {
+                            $pull: {
+                                likes: {
+                                    user_id: req.user.user_id,
                                 }
-                            }).then((doc2) => {
-                                if (doc2) {
-                                    res.send(responseMessageCreator("The article has been successfully bookmarked"))
-                                } else {
-                                    res.send(responseMessageCreator("Some error occured", 0))
-                                }
-                            })
-                        }
-                    })
+                            }
+                        }).then((doc2) => {
+                            if (doc2) {
+                                console.log("disliked")
+                                res.send(responseMessageCreator("Unliked article!"))
+                            } else {
+                                res.send(responseMessageCreator("Some error occured", 0))
+                            }
+                        })
+                    }
+
+
+
+
+                } else {
+                    res.status(400).send(responseMessageCreator("Invalid article id", 0))
+                }
+            })
+        }
+    } else {
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+
+export const bookmarkArticle = (req: Request, res: Response) => {
+    let version = req.params.version
+    if (version == "v1") {
+        let body = _.pick(req.body, ["article_id", "action"])
+
+        if (body.article_id == null) {
+            res.status(400).send(responseMessageCreator("Invalid article id", 0))
+        } else {
+            Article.exists({
+                article_id: body.article_id
+            }).then((status) => {
+                if (status) {
+
+                    if (body.action == "bookmark" || body.action == 1) {
+                        User.exists({
+                            user_id: req.user.user_id,
+                            "bookmarks.article_id": body.article_id
+                        }).then((doc) => {
+                            if (doc) {
+                                res.send(responseMessageCreator("The article is already bookmarked", 0))
+                            } else {
+                                User.findOneAndUpdate({
+                                    user_id: req.user.user_id
+                                }, {
+                                    $push: {
+                                        bookmarks: {
+                                            article_id: body.article_id,
+                                            bookmarked_on: Date.now()
+                                        }
+                                    }
+                                }).then((doc2) => {
+                                    if (doc2) {
+                                        res.send(responseMessageCreator("The article has been successfully bookmarked"))
+                                    } else {
+                                        res.send(responseMessageCreator("Some error occured", 0))
+                                    }
+                                })
+                            }
+                        })
+                    } else {
+                        User.exists({
+                            user_id: req.user.user_id,
+                            "bookmarks.article_id": body.article_id
+                        }).then((doc) => {
+                            if (!doc) {
+                                res.send(responseMessageCreator("Article is not bookmarked", 0))
+                            } else {
+                                User.findOneAndUpdate({
+                                    user_id: req.user.user_id
+                                }, {
+                                    $pull: {
+                                        bookmarks: {
+                                            article_id: body.article_id,
+                                        }
+                                    }
+                                }).then((doc2) => {
+                                    if (doc2) {
+                                        res.send(responseMessageCreator("The article has been successfully removed from bookmark"))
+                                    } else {
+                                        res.send(responseMessageCreator("Some error occured", 0))
+                                    }
+                                })
+                            }
+                        })
+                    }
+
 
                 } else {
                     res.status(400).send(responseMessageCreator("Invalid article id", 0))
@@ -397,7 +479,7 @@ export const addToBookmark = (req: Request, res: Response) => {
 }
 
 export const getAllUserBookmarks = (req: Request, res: Response) => {
-    let version = req.params.version;
+    let version = req.params.version
 
     console.log({ query: req.query, body: req.body })
     if (version == "v1") {
@@ -420,55 +502,8 @@ export const getAllUserBookmarks = (req: Request, res: Response) => {
     }
 }
 
-export const removeArticleFromBookmark = (req: Request, res: Response) => {
-    let version = req.params.version;
-    if (version == "v1") {
-        let body = _.pick(req.body, ["article_id"])
-
-        if (body.article_id == null) {
-            res.status(400).send(responseMessageCreator("Invalid article id", 0))
-        } else {
-            Article.exists({
-                article_id: body.article_id
-            }).then((status) => {
-                if (status) {
-                    User.exists({
-                        user_id: req.user.user_id,
-                        "bookmarks.article_id": body.article_id
-                    }).then((doc) => {
-                        if (!doc) {
-                            res.send(responseMessageCreator("Article is not bookmarked", 0))
-                        } else {
-                            User.findOneAndUpdate({
-                                user_id: req.user.user_id
-                            }, {
-                                $pull: {
-                                    bookmarks: {
-                                        article_id: body.article_id,
-                                    }
-                                }
-                            }).then((doc2) => {
-                                if (doc2) {
-                                    res.send(responseMessageCreator("The article has been successfully removed from bookmark"))
-                                } else {
-                                    res.send(responseMessageCreator("Some error occured", 0))
-                                }
-                            })
-                        }
-                    })
-
-                } else {
-                    res.status(400).send(responseMessageCreator("Invalid article id", 0))
-                }
-            })
-        }
-    } else {
-        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
-    }
-}
-
 export const removeAllUserBookmarks = (req: Request, res: Response) => {
-    let version = req.params.version;
+    let version = req.params.version
     if (version == "v1") {
         User.exists({
             user_id: req.user.user_id,
@@ -495,7 +530,7 @@ export const removeAllUserBookmarks = (req: Request, res: Response) => {
 }
 
 export const addToHistory = (req: Request, res: Response) => {
-    let version = req.params.version;
+    let version = req.params.version
     if (version == "v1") {
         let body = _.pick(req.body, ["article_id"])
 
@@ -542,7 +577,7 @@ export const addToHistory = (req: Request, res: Response) => {
 }
 
 export const getCompleteHistory = (req: Request, res: Response) => {
-    let version = req.params.version;
+    let version = req.params.version
 
     console.log({ query: req.query, body: req.body })
     if (version == "v1") {
@@ -566,7 +601,7 @@ export const getCompleteHistory = (req: Request, res: Response) => {
 }
 
 export const removeArticleFromHistory = (req: Request, res: Response) => {
-    let version = req.params.version;
+    let version = req.params.version
     if (version == "v1") {
         let body = _.pick(req.body, ["article_id"])
 
@@ -613,7 +648,7 @@ export const removeArticleFromHistory = (req: Request, res: Response) => {
 }
 
 export const removeCompleteHistory = (req: Request, res: Response) => {
-    let version = req.params.version;
+    let version = req.params.version
     if (version == "v1") {
         User.exists({
             user_id: req.user.user_id,
@@ -641,6 +676,7 @@ export const removeCompleteHistory = (req: Request, res: Response) => {
 
 export default {
     userDetailsController,
+    getUserByUsername,
 
     followUserUsingId,
     unfollowUserUsingId,
@@ -652,10 +688,11 @@ export default {
 
     updateUserSetting,
 
-    addToBookmark,
+    likeArticle,
+
+    bookmarkArticle,
     getAllUserBookmarks,
     removeAllUserBookmarks,
-    removeArticleFromBookmark,
 
     addToHistory,
     getCompleteHistory,

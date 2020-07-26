@@ -101,22 +101,36 @@ export const registerController = (req: Request, res: Response) => {
 
 
 export const loginController = (req: Request, res: Response) => {
-    let body = _.pick(req.body, ["email", "password", "session_persistance"])
+    let body = _.pick(req.body, ["email", "password", "session_persistance", "clear_tokens"])
 
     User.findByCredentials(body.email, body.password).then((user: any) => {
-        return user.generateAuthToken().then((token: any) => {
-            if (req.body.cache) {
-                if (req.session && body.session_persistance) {
-                    req.session.xAuth = token
-                    req.session.uid = user._id
-                    req.session.name = user.email
+        if (body.clear_tokens) {
+            user.removeAllAuthToken().then(() => {
+                return user.generateAuthToken().then((token: any) => {
+                    if (req.body.cache) {
+                        if (req.session && body.session_persistance) {
+                            req.session.xAuth = token
+                            req.session.uid = user._id
+                            req.session.name = user.email
+                        }
+                        res.setHeader("x-auth", token)
+                    }
+                    res.send(responseMessageCreator({ user: user.toJSON(), token }, 1))
+                })
+            })
+        } else {
+            return user.generateAuthToken().then((token: any) => {
+                if (req.body.cache) {
+                    if (req.session && body.session_persistance) {
+                        req.session.xAuth = token
+                        req.session.uid = user._id
+                        req.session.name = user.email
+                    }
+                    res.setHeader("x-auth", token)
                 }
-                res.setHeader("x-auth", token)
-            }
-            // res.send({ success: true, user: user.toJSON(), token })
-            res.send(responseMessageCreator({ user: user.toJSON(), token }, 1))
-            // res.header('x-auth', token).redirect('/me');
-        })
+                res.send(responseMessageCreator({ user: user.toJSON(), token }, 1))
+            })
+        }
     }).catch((e: any) => {
         logger(e, Level.ERROR)
         let message = "Invalid login credentials"
@@ -152,7 +166,7 @@ export const VerifyEmail = (req: Request, res: Response) => {
                 user.email_verified = 1
                 user.save().then((doc: any) => {
                     user.removeAllVerificationToken().then(() => {
-                        res.send(responseMessageCreator("Email is now verified",1))
+                        res.send(responseMessageCreator("Email is now verified", 1))
                     })
                 })
             }

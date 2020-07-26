@@ -50,7 +50,7 @@ export const auth_middleware = (req: Request, res: Response, next: NextFunction,
             logger({ e }, Level.ERROR)
 
             if (auth_mode == Auth.IS_LOGGED_IN) {
-                res.status(401).send({ success: false, error: { message: "INVALID AUTH" } })
+                res.status(401).send({ success: false, error: { message: "INVALID AUTH 1" } })
             }
             else if (auth_mode == Auth.IS_LOGGED_OUT) {
                 req.user = null
@@ -65,7 +65,7 @@ export const auth_middleware = (req: Request, res: Response, next: NextFunction,
     } else {
 
         if (auth_mode == Auth.IS_LOGGED_IN) {
-            res.status(401).send({ success: false, error: { message: "INVALID AUTH" } })
+            res.status(401).send({ success: false, error: { message: "INVALID AUTH 2" } })
         }
         else if (auth_mode == Auth.IS_LOGGED_OUT) {
             req.user = null
@@ -83,7 +83,7 @@ export const checkIfUserIsAdmin = (req: Request, res: Response, next: NextFuncti
     if (req.user != null && req.token != null) {
         if (req.user.details.account_type === 1) {
             // check for account type in the condition above
-            next();
+            next()
         } else {
             res.status(401).send({ success: false, error: { message: "INVALID AUTH" } })
         }
@@ -96,7 +96,7 @@ export const checkIfUserIsAdminOrModerator = (req: Request, res: Response, next:
     if (req.user != null && req.token != null) {
         if (req.user.details.account_type === 1) {
             // check for account type in the condition above
-            next();
+            next()
         } else if (req.body.community_id != null) {
             //check for moderator in community with the user id
             Communities.exists({
@@ -123,11 +123,13 @@ export const checkIfUserIsAdminOrModerator = (req: Request, res: Response, next:
 export const checkIfUserIsModerator = (req: Request, res: Response, next: NextFunction) => {
     if (req.user != null && req.token != null) {
         if (req.body.community_id != null) {
-            Communities.exists({
+            Communities.find({
                 community_id: req.body.community_id,
-                "moderator_list.user_id": req.user.user_id
+                "users_list.user_id": req.user.user_id
             }).then((doc) => {
                 if (doc) {
+                    console.log("from auth middleware")
+                    console.log({ doc })
                     next()
                 } else {
                     res.status(401).send({ success: false, error: { message: "INVALID AUTH" } })
@@ -144,11 +146,11 @@ export const checkIfUserIsModerator = (req: Request, res: Response, next: NextFu
     }
 }
 
-export const auth_middleware_wrapper_IS_LOGGED_IN = (req: Request, res: Response, next: NextFunction) => {
+export const auth_IS_LOGGED_IN = (req: Request, res: Response, next: NextFunction) => {
     auth_middleware(req! as Request, res! as Response, next, Auth.IS_LOGGED_IN)
 }
 
-export const auth_middleware_wrapper_IS_LOGGED_OUT = (req: Request, res: Response, next: NextFunction) => {
+export const auth_IS_LOGGED_OUT = (req: Request, res: Response, next: NextFunction) => {
     auth_middleware(req! as Request, res! as Response, next, Auth.IS_LOGGED_OUT)
 }
 

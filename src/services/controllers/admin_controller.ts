@@ -12,7 +12,7 @@ import { responseMessageCreator } from "../../lib/response_message_creator"
 import { cleanObject } from "../../lib/clean_object"
 
 export const getAllUsers = (req: Request, res: Response) => {
-    let version = req.params.version;
+    let version = req.params.version
     if (version == "v1") {
         User.find({}).then((doc) => {
             res.send(responseMessageCreator({ data: doc }))
@@ -23,7 +23,7 @@ export const getAllUsers = (req: Request, res: Response) => {
 }
 
 export const getAllInviteRequests = (req: Request, res: Response) => {
-    let version = req.params.version;
+    let version = req.params.version
     if (version == "v1") {
         Invite.find({
             status: Status.REQUESTED
@@ -38,7 +38,7 @@ export const getAllInviteRequests = (req: Request, res: Response) => {
 }
 
 export const getAllRejectedRequests = (req: Request, res: Response) => {
-    let version = req.params.version;
+    let version = req.params.version
     if (version == "v1") {
         Invite.find({
             status: Status.BANNED
@@ -53,7 +53,7 @@ export const getAllRejectedRequests = (req: Request, res: Response) => {
 }
 
 export const rejectInviteRequest = (req: Request, res: Response) => {
-    let version = req.params.version;
+    let version = req.params.version
     if (version == "v1") {
         let body = _.pick(req.body, ["email"])
 
