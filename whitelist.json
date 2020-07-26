@@ -1,8 +1,6 @@
 [
     "http://localhost:3000",
     "http://localhost:5000",
-    "https://latticeproject.github.io",
-    "https://latticeproject.herokuapp.com",
-    "https://lattice-api-eu.herokuapp.com",
-    "https://lattice-api-us.herokuapp.com"
+    "https://devorzo.github.io",
+    "https://devorzo.herokuapp.com"
 ]
