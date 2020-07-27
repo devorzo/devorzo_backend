@@ -119,6 +119,26 @@ const ArticleSchema: Schema = new Schema({
             required: true
         }
     }],
+    comments: [{
+        comment_id: {
+            type: String,
+            default: `cmt.${v4()}`,
+            required: true
+        },
+        user_id: {
+            type: String,
+            required: true
+        },
+        comment: {
+            type: String,
+            required: true
+        },
+        commented_on: {
+            type: Number,
+            default: Date.now(),
+            required: true
+        }
+    }],
     tags: [{
         tag: {
             type: String,

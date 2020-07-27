@@ -69,6 +69,19 @@ const articleApiService = (app: express.Application) => {
 
     // router.get("/api/:version/")
 
+    // add comment 
+    router.post("/api/:version/addComment",
+        auth_IS_LOGGED_IN,
+        ArticleController.addComment)
+
+    // delete comment
+    router.delete("/api/:version/deleteComment",
+        auth_IS_LOGGED_IN,
+        ArticleController.deleteComment)
+
+    // get comment
+    router.get("/api/:version/getComments/:article_id/:page/:limit",
+        ArticleController.getComment)
 
     // router.get("/api/:version/getAllUserArticlesUsingUid")
 

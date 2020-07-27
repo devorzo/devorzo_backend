@@ -93,11 +93,11 @@ export interface IArticleDocument extends Document {
     views: number;
 
     article_type: number;
-    
+
     community_id: string;
     belongs_to_community: number; //0|1
 
-    
+
     moderation_status: number; //0|1
 
     //change later
@@ -106,6 +106,12 @@ export interface IArticleDocument extends Document {
     likes: {
         user_id: string;
         liked_on: number;
+    }[];
+    comments: {
+        comment_id: string;
+        user_id: string;
+        comment: string;
+        commented_on: number;
     }[];
     tags: {
         tag: string,
@@ -162,7 +168,7 @@ export interface ICommunityDocument extends Document {
     //     invited_on: number;
     //     status: number;
     // }[]
-    
+
     // banned_user: {
     //     user_id: string;
     //     // temp ban: cant see comm

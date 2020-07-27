@@ -130,12 +130,12 @@ export const getArticlesByUserId = (req: Request, res: Response) => {
             query.push({ $sort: { _id: -1 } })
 
             // query.push({
-            //     $lookup: {
-            //         from: "users",
-            //         localField: "author_id",
-            //         foreignField: "user_id",
-            //         as: "author_details"
-            //     }
+            // $lookup: {
+            //     from: "users",
+            //     localField: "author_id",
+            //     foreignField: "user_id",
+            //     as: "author_details"
+            // }
             // })
 
             Article.aggregate(query).then((doc: any) => {
@@ -290,7 +290,7 @@ export const getArticlesByUsername = (req: Request, res: Response) => {
                                 d.likes = (d.likes) ? d.likes.length : 0
 
                                 delete d.person_details
-                                
+
                                 return {
                                     ...d,
                                     liked,
@@ -946,6 +946,161 @@ export const deleteAllCommunityArticleByCommunityId = (req: Request, res: Respon
     }
 }
 
+export const addComment = (req: Request, res: Response) => {
+    let version = req.params.version
+    if (version == "v1") {
+        let body = _.pick(req.body, ["article_id", "comment"])
+        if (body.comment.trim() != "") {
+            Article.exists({
+                article_id: body.article_id
+            }).then((exists) => {
+                if (exists) {
+                    Article.findOneAndUpdate({
+                        article_id: body.article_id
+                    }, {
+                        $push: {
+                            comments: {
+                                user_id: req.user.user_id,
+                                comment: body.comment,
+                                comment_id: `cmt.${v4()}`,
+                                commented_on: Date.now()
+                            }
+                        }
+                    }, function (err, doc) {
+                        if (!err) {
+                            res.send(responseMessageCreator("Added comment"))
+                        } else {
+                            res.status(400).send(responseMessageCreator({ err, doc }, 0))
+                        }
+                    })
+                } else {
+                    res.send(responseMessageCreator("No Article found", 0))
+                }
+            })
+        } else {
+            res.send(responseMessageCreator("Invalid comment", 0))
+        }
+
+    } else {
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+
+export const deleteComment = (req: Request, res: Response) => {
+    let version = req.params.version
+    if (version == "v1") {
+        let body = _.pick(req.body, ["article_id", "comment_id"])
+        Article.exists({
+            article_id: body.article_id,
+            "comments.comment_id": body.comment_id
+        }).then((exists) => {
+            if (exists) {
+                Article.exists({
+                    article_id: body.article_id
+                }).then((exists) => {
+                    if (exists) {
+                        Article.findOneAndUpdate({
+                            article_id: body.article_id
+                        }, {
+                            $pull: {
+                                comments: {
+                                    user_id: req.user.user_id,
+                                    comment_id: body.comment_id,
+                                }
+                            }
+                        }, function (err, doc) {
+                            if (!err) {
+                                res.send(responseMessageCreator(doc))
+                            } else {
+                                res.status(400).send(responseMessageCreator({ err, doc }, 0))
+                            }
+                        })
+                    } else {
+                        res.send(responseMessageCreator("No comment found", 0))
+                    }
+                })
+            } else {
+                res.send(responseMessageCreator("No comment found", 0))
+            }
+        })
+    } else {
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
+
+export const getComment = (req: Request, res: Response) => {
+    let version = req.params.version
+    if (version == "v1") {
+        // let rbody = _.pick(req.body, [])
+
+        let body: any = _.pick(req.params, ["article_id", "page", "limit"])
+        body.page = parseInt(body.page)
+        body.limit = parseInt(body.limit)
+
+        if (body.page == null || isNaN(body.page)) {
+            body.page = 0
+        }
+
+        if (body.limit == null || isNaN(body.limit)) {
+            body.limit = 10
+        }
+
+        Article.exists({
+            article_id: body.article_id
+        }).then((exists) => {
+            if (exists) {
+                Article.aggregate([
+                    {
+                        $match: {
+                            article_id: body.article_id
+                        }
+                    },
+
+                    { $project: { _id: 0, comments: "$comments" } },
+
+                    { $project: { "comment": { $slice: ["$comments", (+body.page) * 10, +body.limit] } } },
+                    { $project: { "comment._id": 0 } },
+                    { $unwind: "$comment" },
+                    {
+                        $lookup: {
+                            from: "users",
+                            localField: "comment.user_id",
+                            foreignField: "user_id",
+                            as: "author_details"
+                        }
+                    },
+                    {
+                        $project: {
+                            "author_details": {
+                                _id: 0,
+                                // user_id: 0,
+                                "details": {
+                                    user_bio: 0,
+                                    gender: 0
+                                },
+                                "account_created_on": 0,
+                                "account_initialised": 0,
+                                "email_verified": 0,
+                                "password": 0,
+                                "bookmarks": 0,
+                                "tokens": 0,
+                                "email": 0,
+                                "history": 0,
+                                "_v": 0
+                            }
+                        }
+                    }
+                ]).then((doc) => {
+                    res.send(responseMessageCreator({ data: doc }))
+                })
+            } else {
+                res.send(responseMessageCreator("No Article found", 0))
+            }
+        })
+    } else {
+        res.status(400).send(responseMessageCreator("Invalid API version provided!", 0))
+    }
+}
 export default {
     createArticle,
     getArticleById,
@@ -960,7 +1115,11 @@ export default {
     UpdateArticleById,
     deleteArticleById,
     deleteAllUserArticleByUserId,
-    deleteAllCommunityArticleByCommunityId
+    deleteAllCommunityArticleByCommunityId,
+
+    addComment,
+    deleteComment,
+    getComment
 }
 // export const s = (req: Request, res: Response) => {
 //     let version = req.params.version
