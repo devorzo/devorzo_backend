@@ -64,9 +64,8 @@ const UserSchema: Schema = new Schema({
         },
         user_bio: {
             type: String,
-            // eslint-disable-next-line quotes
-            default: `Hey! I am a learner!`,
-            required: true,
+            default: "",
+            // required: true,
             trim: true,
             minlength: 1,
         },
