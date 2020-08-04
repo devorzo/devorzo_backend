@@ -67,7 +67,7 @@ const UserSchema: Schema = new Schema({
             default: "",
             // required: true,
             trim: true,
-            minlength: 1,
+            // minlength: 0,
         },
         account_type: {
             type: Number,

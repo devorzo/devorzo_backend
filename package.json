@@ -9,9 +9,9 @@
     "linter:fix": "eslint src/**/*.{ts,js,jsx} --fix",
     "prebuild": "echo prebuild",
     "build": "tsc -b",
-    "start:dev": "concurrently \"tsc -w\" \"nodemon dist\\app.js --service=all --env=development\"",
-    "start:api": "nodemon dist/app.js --service=all --env=development",
-    "compile": "tsc -w",
+    "start:concur": "concurrently \"tsc -w\" \"nodemon dist\\app.js --service=all --env=development\"",
+    "start:dev": "nodemon dist/app.js --service=all --env=development",
+    "watch": "tsc -w",
     "pretest": "eslint --ignore-path .gitignore --ext ts,tsx,js,jsx src/*",
     "test": "mocha -r ts-node/register tests/**/*.test.ts",
     "coverage": "nyc -r lcov -e .ts -x \"*.test.ts\" npm run test"
@@ -59,8 +59,7 @@
     "mocha": "^7.1.0",
     "nodemon": "^2.0.2",
     "nyc": "^15.0.0",
-    "ts-node": "^8.6.2",
-    "typescript": "^3.8.3"
+    "ts-node": "^8.6.2"
   },
   "dependencies": {
     "@sendgrid/mail": "^7.1.0",
@@ -85,6 +84,7 @@
     "node-fetch": "^2.6.0",
     "page-metadata-parser": "^1.1.4",
     "path": "^0.12.7",
+    "typescript": "^3.8.3",
     "uuid": "^7.0.2",
     "validator": "^12.2.0"
   }
