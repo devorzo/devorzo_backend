@@ -51,6 +51,7 @@ let whitelist = require("../whitelist.json")
 
 let corsOptionsDelegate = function (req: any, callback: any) {
     let corsOptions
+    console.log(req.header("Origin"), whitelist.indexOf(req.header("Origin")))
     if (whitelist.indexOf(req.header("Origin")) !== -1) {
         corsOptions = { origin: true } 
     } else {
