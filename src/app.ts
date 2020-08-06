@@ -65,7 +65,8 @@ if (process.env.NODE_ENV == "development")
     app.use(cors())
 else {
     app.use((req, res, next) => {
-        if (whitelist.indexOf(req.header("Origin")) !== -1) {
+        if (whitelist.indexOf(req.header("Origin")) !== -1 &&
+            process.env.ENABLE_RFC1918) {
             res.append("Access-Control-Allow-External", "true")
         }
         next()
