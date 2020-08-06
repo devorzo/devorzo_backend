@@ -48,25 +48,22 @@ logger({ argv }, Level.VERBOSE)
 let app = express()
 
 let whitelist = require("../whitelist.json")
-var corsOptions: cors.CorsOptions = {
-    //@ts-ignore
-    origin: function (origin: string, callback: any) {
-        console.log(origin, whitelist.indexOf(origin))
-        if (!origin) return callback(null, true)
 
-        if (whitelist.indexOf(origin) !== -1) {
-            callback(null, true)
-        } else {
-            callback("Invalid Request")
-        }
+let corsOptionsDelegate = function (req: any, callback: any) {
+    let corsOptions
+    if (whitelist.indexOf(req.header("Origin")) !== -1) {
+        corsOptions = { origin: true } 
+    } else {
+        corsOptions = { origin: false }
     }
+    callback(null, corsOptions)
 }
 
 app.use(helmet())
 if (process.env.NODE_ENV == "development")
     app.use(cors())
 else
-    app.use(cors(corsOptions))
+    app.use(cors(corsOptionsDelegate))
 
 
 /*  Database handlers */
