@@ -13,6 +13,7 @@ const suggestionApiService = (app: express.Application) => {
         res.send({ status: 200, success:true })
     })
     
+    router.post("/api/:version/search")
     app.use(router)
 }
 

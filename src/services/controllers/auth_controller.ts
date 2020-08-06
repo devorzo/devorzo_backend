@@ -156,26 +156,28 @@ export const logoutController = (req: Request, res: Response) => {
 }
 
 export const VerifyEmail = (req: Request, res: Response) => {
-    let token = req.body.vtoken
-    User.findByToken(token, "verify").then((user: any) => {
-        if (user) {
-            console.log({ user_from_verif: user })
-            if (user.email_verified == 1) {
-                res.status(400).send(responseMessageCreator("Email is already verified", 0))
+    let token = req.body.code
+
+    User.findOne({
+        email: req.user.email,
+        "tokens.token": token.toUpperCase(),
+        "tokens.access": "verify"
+    }).then(doc => {
+        console.log({u: req.user.email, doc, token})
+        if (doc) {
+            if (doc.email_verified == 1) {
+                res.status(400).send(responseMessageCreator("Email is already verified",0))
             } else {
-                user.email_verified = 1
-                user.save().then((doc: any) => {
-                    user.removeAllVerificationToken().then(() => {
-                        res.send(responseMessageCreator("Email is now verified", 1))
+                doc.email_verified = 1
+                doc.save().then(() => {
+                    doc.removeAllVerificationToken().then(() => {
+                        res.send(responseMessageCreator("Email is now verified"))
                     })
                 })
             }
         } else {
-            res.status(401).send(responseMessageCreator("Invalid Token", 0))
+            res.status(400).send(responseMessageCreator("Invalid Code", 0))
         }
-    }).catch((e: any) => {
-        console.log(e)
-        res.send(e)
     })
 }
 

@@ -14,7 +14,7 @@ const notificationApiService = (app: express.Application) => {
         }
     })
 
-    router.post("/api/:version/sendEmailVerificationEmail",
+    router.post("/api/:version/sendVerificationEmail",
         auth_IS_LOGGED_IN,
         Notifications.sendVerificationEmail)
 
@@ -22,13 +22,13 @@ const notificationApiService = (app: express.Application) => {
         auth_IS_LOGGED_IN,
         Notifications.sendPasswordResetEmail)
 
-    router.post("/api/:version/requestInviteCode",
-        Notifications.requestInviteCode)
+    // router.post("/api/:version/requestInviteCode",
+    //     Notifications.requestInviteCode)
 
-    router.post("/api/:version/sendInviteEmail",
-        auth_IS_LOGGED_IN,
-        checkIfUserIsAdmin,
-        Notifications.sendInviteEmail)
+    // router.post("/api/:version/sendInviteEmail",
+    //     auth_IS_LOGGED_IN,
+    //     checkIfUserIsAdmin,
+    //     Notifications.sendInviteEmail)
     app.use(router)
     // todo: api for news letter
 }

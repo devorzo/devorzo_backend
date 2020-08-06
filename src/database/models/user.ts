@@ -173,30 +173,26 @@ UserSchema.methods.generateAuthToken = function () {
 UserSchema.methods.generateVerifyToken = function () {
     let user = this
     let access = "verify"
-    let t1 = generateHexString(32)
-    let t2 = generateHexString(32)
-    let t3 = generateHexString(32)
-    let token = `${t1}.${t2}.${t3}`
+    let code = generateHexString(8).toUpperCase()
+    let token = `${code}`
 
     user.tokens.push({ access, token })
 
     return user.save().then(() => {
-        return { t1, t2, t3, token }
+        return { code, token }
     })
 }
 
 UserSchema.methods.generateResetToken = function () {
     let user = this
     let access = "reset"
-    let t1 = generateHexString(32)
-    let t2 = generateHexString(32)
-    let t3 = generateHexString(32)
-    let token = `${t1}.${t2}.${t3}`
+    let code = generateHexString(8).toUpperCase()
+    let token = `${code}`
 
     user.tokens.push({ access, token })
 
     return user.save().then(() => {
-        return { t1, t2, t3, token }
+        return { code, token }
     })
 }
 
