@@ -53,7 +53,7 @@ let corsOptionsDelegate = function (req: any, callback: any) {
     let corsOptions
     console.log(req.header("Origin"), whitelist.indexOf(req.header("Origin")))
     if (whitelist.indexOf(req.header("Origin")) !== -1) {
-        corsOptions = { origin: true } 
+        corsOptions = { origin: true }
     } else {
         corsOptions = { origin: false }
     }
@@ -63,8 +63,15 @@ let corsOptionsDelegate = function (req: any, callback: any) {
 app.use(helmet())
 if (process.env.NODE_ENV == "development")
     app.use(cors())
-else
+else {
+    app.use((req, res, next) => {
+        if (whitelist.indexOf(req.header("Origin")) !== -1) {
+            res.append("Access-Control-Allow-External", "true")
+        }
+        next()
+    })
     app.use(cors(corsOptionsDelegate))
+}
 
 
 /*  Database handlers */
