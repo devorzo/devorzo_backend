@@ -1,15 +1,15 @@
 import _ from "lodash"
 import User from "../../database/models/user"
-import Article from "../../database/models/article"
-import Followers from "../../database/models/follower"
+// import Article from "../../database/models/article"
+// import Followers from "../../database/models/follower"
 import Invite, { Status } from "../../database/models/invite_code"
 
 // eslint-disable-next-line no-unused-vars
 import express, { Request, Response } from "express"
-import logger, { Level } from "../../lib/logger"
+// import logger, { Level } from "../../lib/logger"
 import { responseMessageCreator } from "../../lib/response_message_creator"
 // import "../../lib/"
-import { cleanObject } from "../../lib/clean_object"
+// import { cleanObject } from "../../lib/clean_object"
 
 export const getAllUsers = (req: Request, res: Response) => {
     let version = req.params.version

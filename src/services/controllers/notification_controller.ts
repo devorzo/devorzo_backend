@@ -1,10 +1,11 @@
+/* eslint-disable no-unused-vars */
 import sendgrid from "@sendgrid/mail"
 import express, { Request, Response } from "express"
 import _ from "lodash"
 import { responseMessageCreator } from "../../lib/response_message_creator"
 
 import User from "../../database/models/user"
-import Invite, {Status} from "../../database/models/invite_code"
+import Invite, { Status } from "../../database/models/invite_code"
 import validateEmail from "../../lib/validate_email"
 import { generateHexString } from "../../lib/hex_rand"
 enum Role {
@@ -24,19 +25,31 @@ function rotcc13(str: any) {
     return str.split("").map(translate).join("")
 }
 
-const EmailTemplates = (role = Role.verification, type = Type.html) => {
+const EmailTemplates = (role = Role.verification, type = Type.html, data: any) => {
     let template = ""
     if (role == Role.verification) {
         if (type == Type.html) {
-            template = ""
+            template = `
+            <p>Hi</p>
+            <p>Your Devorzo email verification code is <h1><code>${data.code}<code></h1></p>
+            `
         } else if (type == Type.text) {
-            template = ""
+            template = `
+            Hi\n
+            Your email verification code is ${data.code}\n
+            `
         }
     } else if (role == Role.reset) {
         if (type == Type.html) {
-            template = ""
+            template = `
+            <p>Hi</p>
+            <p>Your password reset code is <h1><code>${data.code}<code></h1></p>
+            `
         } else if (type == Type.text) {
-            template = ""
+            template = `
+            Hi\n
+            Your password reset code is ${data.code}\n
+            `
         }
     }
 
@@ -80,15 +93,15 @@ export const sendVerificationEmail = (req: Request, res: Response) => {
 
         User.findByToken(req.token, "auth").then((user: any) => {
             // console.log({user})
-            user.removeAllVerificationToken().then((d: any) => {
+            user.removeAllVerificationToken().then(() => {
                 user.generateVerifyToken().then((doc: any) => {
                     console.log(doc.token)
                     EmailSender({
                         to: req.user.email,
-                        from: "noreply@lattice.com",
+                        from: "noreply@devorzo.com",
                         subject: "Verify your email",
-                        text: `link: ${doc.t1}/${doc.t2}/${doc.t3}`,
-                        html: `link: ${doc.t1}/${doc.t2}/${doc.t3}`
+                        text: EmailTemplates(Role.verification,Type.text, doc),
+                        html: EmailTemplates(Role.verification,Type.html, doc),
                     }, (doc: any) => {
                         if (doc.success) {
                             res.send(responseMessageCreator("Sent email", 1))
@@ -110,15 +123,15 @@ export const sendPasswordResetEmail = (req: Request, res: Response) => {
     if (version == "v1") {
         console.log({ user: req.user, t: req.token })
         User.findByToken(req.token, "auth").then((user: any) => {
-            user.removeAllResetToken().then((d: any) => {
+            user.removeAllResetToken().then(() => {
                 user.generateResetToken().then((doc: any) => {
-                    console.log(doc.token)
+                    // console.log(doc.token)
                     EmailSender({
                         to: req.user.email,
-                        from: "noreply@lattice.com",
+                        from: "noreply@devorzo.com",
                         subject: "Reset your password",
-                        text: `link: ${doc.t1}/${doc.t2}/${doc.t3}`,
-                        html: `link: ${doc.t1}/${doc.t2}/${doc.t3}`
+                        text: EmailTemplates(Role.reset,Type.text, doc),
+                        html: EmailTemplates(Role.reset,Type.html, doc),
                     }, (doc: any) => {
                         if (doc.success) {
                             res.send(responseMessageCreator("Sent email", 1))
@@ -219,9 +232,10 @@ export const sendInviteEmail = (req: Request, res: Response) => {
                                 }, (doc: any) => {
                                     if (doc.success) {
                                         res.send(responseMessageCreator("Sent email", 1))
-                                    } else {
+                                    } 
+                                    // else {
 
-                                    }
+                                    // }
                                 })
                             })
                         } else {
