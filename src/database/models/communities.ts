@@ -1,23 +1,17 @@
 import { Schema, model } from "mongoose"
 import { v4 } from "uuid"
+// eslint-disable-next-line no-unused-vars
 import { ICommunityDocument, ICommunity, ICommunityModel } from "../../interfaces/databaseInterfaces"
 
-export enum CommunityMode {
-    PUBLIC,
-    PRIVATE
-}
+// eslint-disable-next-line no-unused-vars
+export enum CommunityMode { PUBLIC, PRIVATE }
 
-export enum Status {
-    INVITED,
-    ACCEPTED
-}
+// eslint-disable-next-line no-unused-vars
+export enum Status { INVITED, ACCEPTED }
 
-export enum Role {
-    ADMIN,
-    FOLLOWER,
-    MODERATOR,
-    BANNED
-}
+// eslint-disable-next-line no-unused-vars
+export enum Role { ADMIN, FOLLOWER, MODERATOR, BANNED }
+
 const CommunitySchema: Schema = new Schema({
     rules: {
         type: String,

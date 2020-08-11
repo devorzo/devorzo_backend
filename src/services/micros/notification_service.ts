@@ -1,5 +1,6 @@
 import express from "express"
 import Notifications from "../controllers/notification_controller"
+// eslint-disable-next-line no-unused-vars
 import { auth_IS_LOGGED_IN, checkIfUserIsAdmin } from "../middleware/auth_middleware"
 import { responseMessageCreator } from "../../lib/response_message_creator"
 const notificationApiService = (app: express.Application) => {

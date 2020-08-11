@@ -94,6 +94,7 @@ export const deleteCommunity = (req: Request, res: Response) => {
                     Community.deleteOne({
                         community_id: body.community_id
                     }).then((d) => {
+                        logger(d, Level.INFO)
                         res.send(responseMessageCreator("Deleted community successfully"))
                     }).catch((e) => {
                         console.log(e)
@@ -155,6 +156,7 @@ export const addUserToPrivateCommunity = (req: Request, res: Response) => {
                                     res.send(responseMessageCreator("User has already joined community", 0))
                                 }
                             }).catch((e) => {
+                                logger(e, Level.ERROR)
                                 res.status(400).send(responseMessageCreator("Some error occured", 0))
                             })
 
@@ -209,6 +211,7 @@ export const removeUserFromCommunity = (req: Request, res: Response) => {
                     res.send(responseMessageCreator("No user found with given credentials", 0))
                 }
             }).catch((e) => {
+                logger(e, Level.ERROR)
                 res.status(400).send(responseMessageCreator("Invalid user", 0))
             })
         } else {
@@ -360,6 +363,7 @@ export const addUserAsModerator = (req: Request, res: Response) => {
                                     })
                                 }
                             }).catch((e) => {
+                                logger(e, Level.ERROR)
                                 res.status(400).send(responseMessageCreator("Some error occured", 0))
                             })
 

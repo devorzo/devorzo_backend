@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 // LZW compression algorithm
 
 class LZW {
@@ -22,6 +23,7 @@ class LZW {
 
             // Do not use dictionary[joinedWord] because javascript objects 
             // will return values for myObject['toString']
+            // eslint-disable-next-line no-prototype-builtins
             if (dictionary.hasOwnProperty(joinedWord)) {
                 word = joinedWord
             }
@@ -68,6 +70,7 @@ class LZW {
                 }
                 else {
                     throw "Error in processing"
+                    // eslint-disable-next-line no-unreachable
                     return null
                 }
             }

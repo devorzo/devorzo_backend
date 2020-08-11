@@ -3,12 +3,8 @@ import validator from "validator"
 // eslint-disable-next-line no-unused-vars
 import { IUserInvite, IUserInviteDocument, IUserInviteModel } from "../../interfaces/databaseInterfaces"
 
-export enum Status {
-    REQUESTED,
-    INVITED,
-    ACCEPTED,
-    BANNED
-}
+// eslint-disable-next-line no-unused-vars
+export enum Status { REQUESTED, INVITED, ACCEPTED, BANNED }
 const InviteSchema: Schema = new Schema({
     email: {
         type: String,

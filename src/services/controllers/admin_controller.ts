@@ -8,6 +8,7 @@ import Invite, { Status } from "../../database/models/invite_code"
 import express, { Request, Response } from "express"
 // import logger, { Level } from "../../lib/logger"
 import { responseMessageCreator } from "../../lib/response_message_creator"
+import logger from "src/lib/logger"
 // import "../../lib/"
 // import { cleanObject } from "../../lib/clean_object"
 
@@ -30,6 +31,7 @@ export const getAllInviteRequests = (req: Request, res: Response) => {
         }).then((doc) => {
             res.send(responseMessageCreator({ data: doc }))
         }).catch((e) => {
+            logger(e)
             res.status(400).send(responseMessageCreator("Some error occured", 0))
         })
     } else {
@@ -45,6 +47,7 @@ export const getAllRejectedRequests = (req: Request, res: Response) => {
         }).then((doc) => {
             res.send(responseMessageCreator({ data: doc }))
         }).catch((e) => {
+            logger(e)
             res.status(400).send(responseMessageCreator("Some error occured", 0))
         })
     } else {
@@ -69,6 +72,7 @@ export const rejectInviteRequest = (req: Request, res: Response) => {
                     res.send(responseMessageCreator("Invalid email", 0))
                 }
             }).catch((e) => {
+                logger(e)
                 res.send(responseMessageCreator("Some error occured", 0))
             })
         }

@@ -1,18 +1,15 @@
 import { Schema, model } from "mongoose"
 import { v4 } from "uuid"
+
 // eslint-disable-next-line no-unused-vars
 import { IArticleDocument, IArticle, IArticleModel } from "../../interfaces/databaseInterfaces"
 
-export enum BooleanFlag {
-    NO,
-    YES,
-    NOT_DECIDED = -1
-}
+// eslint-disable-next-line no-unused-vars
+export enum BooleanFlag { NO, YES, NOT_DECIDED = -1 }
 
-export enum ArticleType {
-    NORMAL,
-    FEATURED
-}
+// eslint-disable-next-line no-unused-vars
+export enum ArticleType { NORMAL, FEATURED }
+
 export const randNum = (min: number, max: number) => {
     let random = Math.round(Math.random() * (+max - +min) + +min)
     return random

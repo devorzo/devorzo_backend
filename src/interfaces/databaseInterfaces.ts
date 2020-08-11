@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-import mongoose, {Schema, Document, Model, Types, model} from 'mongoose';
+import mongoose, {Schema, Document, Model, Types, model} from "mongoose"
 export interface IUserDocument extends Document {
   // SCHEMA
   // isAccountInitialised
