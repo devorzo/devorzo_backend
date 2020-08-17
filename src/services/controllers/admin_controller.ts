@@ -8,7 +8,7 @@ import Invite, { Status } from "../../database/models/invite_code"
 import express, { Request, Response } from "express"
 // import logger, { Level } from "../../lib/logger"
 import { responseMessageCreator } from "../../lib/response_message_creator"
-import logger from "src/lib/logger"
+import logger from "../../lib/logger"
 // import "../../lib/"
 // import { cleanObject } from "../../lib/clean_object"
 
