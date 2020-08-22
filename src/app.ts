@@ -15,6 +15,8 @@ import { TypegooseMiddleware } from './lib/typegooseMiddleware';
 import UserResolver from './schema/resolvers/userResolver';
 import ArticleResolver from './schema/resolvers/articleResolver';
 import CommunityResolver from './schema/resolvers/communityResolver';
+import UserModel, { User } from './schema/entities/user';
+import parseToken from './lib/parseToken';
 
 // import session from "express-session"
 // import { default as connectMongoDBSession } from "connect-mongodb-session"
@@ -58,6 +60,12 @@ const server = new ApolloServer({
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   schema,
+  context: ({ req }) => {
+    const token = req.headers.authorization || '';
+    const id = parseToken(token);
+    const user = UserModel.findOne({ id });
+    return { user };
+  },
 });
 
 server.applyMiddleware({ app });
