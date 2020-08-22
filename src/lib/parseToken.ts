@@ -1,9 +1,8 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { decode } from 'jsonwebtoken';
 
-const parseToken = (token:string): string => {
+const parseToken = (token: string): any => {
   const payload = decode(token);
-  // @ts-ignore
-  return payload ? payload.id : '';
+  return payload;
 };
 export default parseToken;

@@ -25,7 +25,9 @@
   "devDependencies": {
     "@commitlint/cli": "^9.1.2",
     "@commitlint/config-conventional": "^9.1.2",
+    "@types/bcryptjs": "^2.4.2",
     "@types/jsonwebtoken": "^8.5.0",
+    "@types/lodash": "^4.14.159",
     "@types/minimist": "^1.2.0",
     "@types/mongoose": "^5.7.36",
     "@types/uuid": "^8.3.0",
@@ -41,6 +43,7 @@
   "dependencies": {
     "@typegoose/typegoose": "^7.3.2",
     "apollo-server-express": "^2.16.1",
+    "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
     "class-validator": "^0.12.2",
     "cors": "^2.8.5",
@@ -48,6 +51,7 @@
     "graphql": "^15.3.0",
     "helmet": "^4.1.0",
     "jsonwebtoken": "^8.5.1",
+    "lodash": "^4.17.20",
     "minimist": "^1.2.5",
     "mongodb": "^3.6.0",
     "mongoose": "^5.10.0",

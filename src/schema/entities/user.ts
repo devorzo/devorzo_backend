@@ -1,27 +1,34 @@
-import { prop, getModelForClass } from '@typegoose/typegoose';
+/* eslint-disable func-names */
+import {
+  prop, getModelForClass, DocumentType, pre, ReturnModelType,
+} from '@typegoose/typegoose';
 // import { ObjectId } from 'mongodb';
-import { Field, ObjectType } from 'type-graphql';
+import { Field, ObjectType, Int } from 'type-graphql';
 import validator from 'validator';
 import { v4 as uuid } from 'uuid';
 import mongoose from 'mongoose';
-// import { generateHexString } from '../../lib/hex_rand';
+import _ from 'lodash';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import logger, { Level } from '../../lib/logger';
+import { generateHexString } from '../../lib/hex_rand';
 
 mongoose.Promise = global.Promise;
 
-enum Gender {
+export enum Gender {
   'MALE',
   'FEMALE',
   'OTHER',
   'NOT_SPECIFIED' = -1
 }
 
-enum AccountType {
+export enum AccountType {
   'NORMIE',
   'MODERATOR',
   'ADMIN'
 }
 
-enum Access {
+export enum Access {
   'AUTH' = 'auth',
   'VERIFY' = 'verify',
   'RESET' = 'reset',
@@ -34,13 +41,13 @@ enum EmailVerified {
   YES
 }
 
-@ObjectType()
+// @ObjectType()
 class Token {
-  @Field()
+  // @Field()
   @prop({ enum: Access, required: true, type: String })
   access!: Access
 
-  @Field()
+  // @Field()
   @prop({ required: true })
   token!: string
 }
@@ -57,6 +64,25 @@ class Bookmarks {
 }
 
 @ObjectType()
+class SocialLinks {
+  @Field({ nullable: true })
+  @prop()
+  github!: string;
+
+  @Field({ nullable: true })
+  @prop()
+  twitter!: string;
+
+  @Field({ nullable: true })
+  @prop()
+  linkedin!: string;
+
+  @Field({ nullable: true })
+  @prop()
+  link!: string;
+}
+
+@ObjectType()
 class History {
   @Field()
   @prop({ required: true })
@@ -68,6 +94,23 @@ class History {
 }
 
 @ObjectType()
+@pre<User>('save', function (next) {
+  if (this.isModified('password')) {
+    bcrypt.genSalt(10, (err, salt) => {
+      bcrypt.hash(this.password, salt, (error, hash) => {
+        if (err) {
+          logger(error, Level.ERROR);
+          next(err);
+        }
+
+        this.password = hash;
+        next();
+      });
+    });
+  } else {
+    next();
+  }
+})
 export class User {
   // @Field()
   // readonly _id!: ObjectId;
@@ -114,7 +157,7 @@ export class User {
 
   @Field()
   @prop({
-    required: true,
+    // required: true,
     maxlength: 160,
     minlength: 0,
     default: '',
@@ -122,21 +165,21 @@ export class User {
   })
   userBio!: string;
 
-  @Field()
+  @Field(() => Int, { nullable: true })
   @prop({
     enum: AccountType,
     defualt: AccountType.NORMIE,
     type: Number,
-    required: true,
+    // required: true,
   })
   accountType!: AccountType;
 
-  @Field()
+  @Field(() => Int)
   @prop({
     enum: Gender,
+    required: true,
     default: Gender.NOT_SPECIFIED,
     type: Number,
-    required: true,
   })
   gender!: Gender;
 
@@ -155,11 +198,11 @@ export class User {
   })
   accountCreatedOn!: number;
 
-  @Field()
+  @Field(() => Int, { nullable: true })
   @prop()
   accountInitialised!: number;
 
-  @Field()
+  @Field(() => Int, { nullable: true })
   @prop({
     required: true,
     enum: EmailVerified,
@@ -168,24 +211,147 @@ export class User {
   })
   emailVerified!: EmailVerified
 
-  @Field()
+  // @Field()
   @prop({ required: true })
   password!: string;
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  @Field(() => [Token])
+  @Field(() => SocialLinks, { nullable: true })
+  @prop({ type: SocialLinks })
+  socialLinks!: SocialLinks
+
+  // @Field(() => [Token])
   @prop({ type: () => Token, default: [] })
   tokens!: Token[]
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  @Field(() => [Bookmarks])
+  @Field(() => [Bookmarks], { defaultValue: [] })
   @prop({ default: [] })
   bookmarks!: Bookmarks[]
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  @Field(() => [History])
+  @Field(() => [History], { defaultValue: [] })
   @prop({ type: () => History, default: [] })
   history!: History[]
+
+  @Field({ nullable: true })
+  authToken?: string;
+
+  /* statics */
+
+  public static async findByCredentials(
+    this: ReturnModelType<typeof User>,
+    email: string,
+    password: string,
+  ): Promise<User | null> {
+    return this.findOne({
+      email,
+    }).then((user: DocumentType<User> | null) => {
+      if (!user) {
+        return Promise.resolve(null);
+      }
+
+      const compare = bcrypt.compareSync(password, user.password);
+      if (compare) { return user; }
+      return null;
+    });
+  }
+
+  /* methods */
+
+  public async toJSON(this: DocumentType<User>): Promise<Partial<User>> {
+    return _.pick(this, [
+      'userId',
+      'email',
+      'fullname',
+      'username',
+      'profileImage',
+      'userBio',
+      'accountType',
+      'gender',
+      'accountCreatedOn',
+    ]);
+  }
+
+  public async setOauthToken(
+    this: DocumentType<User>,
+    access: Access.TWITTER_ID | Access.GITHUB_ID,
+    token: string,
+    isSigned = true,
+  ): Promise<string> {
+    let signedToken = token;
+    if (isSigned) {
+      signedToken = jwt.sign(
+        {
+          userId: this.userId,
+          token,
+          access,
+        }, process.env.JWT_SECRET!,
+      ).toString();
+    }
+
+    this.tokens.push({ access, token });
+    await this.save();
+
+    return signedToken;
+  }
+
+  public async generateToken(
+    this: DocumentType<User>,
+    access: Access,
+    isSigned = true,
+  ): Promise<string> {
+    const token = generateHexString(128);
+    let signedToken = token;
+    if (isSigned) {
+      signedToken = jwt.sign(
+        {
+          userId: this.userId,
+          token,
+          access,
+        }, process.env.JWT_SECRET!,
+        {
+          expiresIn: '15m',
+        },
+      ).toString();
+    }
+
+    this.tokens.push({ access, token });
+    await this.save();
+
+    return signedToken;
+  }
+
+  public async removeToken(
+    this: DocumentType<User>,
+    token: string,
+    access: Access,
+  ): Promise<boolean> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const decoded: any = jwt.decode(token, {
+      complete: true,
+    });
+
+    if (decoded) {
+      if (decoded.access == access) {
+        await this.updateOne({
+          $pull: {
+            tokens: { token: decoded.token, access },
+          },
+        });
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public async removeAllTokens(
+    this: DocumentType<User>,
+    access: Access,
+  ): Promise<Partial<User>> {
+    return (await this.updateOne({
+      $pull: {
+        tokens: { access },
+      },
+    })).toJSON();
+  }
 }
 
 export const UserModel = getModelForClass(User, { existingMongoose: mongoose });

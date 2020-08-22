@@ -29,6 +29,11 @@ type Bookmarks {
   bookmarkedOn: Float!
 }
 
+input CheckUserIfUnique {
+  email: String
+  username: String
+}
+
 type Comments {
   comment: String!
   commentedOn: Float!
@@ -47,6 +52,21 @@ type Community {
   rules: String!
 }
 
+input CreateNewUser {
+  email: String!
+  fullname: String!
+  gender: Float
+  password: String!
+  userBio: String
+  username: String!
+}
+
+input FindUser {
+  email: String
+  userId: String
+  username: String
+}
+
 type History {
   articleId: String!
   visitedOn: Float!
@@ -57,10 +77,18 @@ type Likes {
   userId: String!
 }
 
+input LogUser {
+  email: String!
+  password: String!
+}
+
 type Mutation {
   addTestArticle: Article!
   addTestCommunity: Community!
-  addTestUser: User!
+  createNewUser(data: CreateNewUser!): User
+  deleteUser(where: FindUser!): Boolean
+  loginExistingUser(where: LogUser!): User
+  updateUser(data: UpdateUser!, where: FindUser!): User
 }
 
 type Query {
@@ -68,8 +96,23 @@ type Query {
   communities: [Community!]!
   helloFromArticle: String!
   helloFromCommunity: String!
-  helloFromUser: String!
+  isUserUnique(where: CheckUserIfUnique!): Boolean!
+  user(where: FindUser!): User
   users: [User!]!
+}
+
+type SocialLinks {
+  github: String
+  link: String
+  linkedin: String
+  twitter: String
+}
+
+input SocialLinksInput {
+  github: String
+  link: String
+  linkedin: String
+  twitter: String
 }
 
 type Tags {
@@ -77,24 +120,29 @@ type Tags {
   tag: String!
 }
 
-type Token {
-  access: String!
-  token: String!
+input UpdateUser {
+  email: String
+  fullname: String
+  gender: Float
+  profileImage: String
+  socialLinks: SocialLinksInput
+  userBio: String
+  username: String
 }
 
 type User {
   accountCreatedOn: Float!
-  accountInitialised: Float!
-  accountType: Float!
-  bookmarks: [Bookmarks!]!
+  accountInitialised: Int
+  accountType: Int
+  authToken: String
+  bookmarks: [Bookmarks!]
   email: String!
-  emailVerified: Float!
+  emailVerified: Int
   fullname: String!
-  gender: Float!
-  history: [History!]!
-  password: String!
+  gender: Int!
+  history: [History!]
   profileImage: String!
-  tokens: [Token!]!
+  socialLinks: SocialLinks
   userBio: String!
   userId: String!
   username: String!
