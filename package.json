@@ -6,8 +6,8 @@
   "scripts": {
     "start": "node dist/app.js --env=production",
     "dev": "ts-node-dev src/app.ts --env=development",
-    "lint": "eslint src/**/*.{ts,js}",
-    "lint:fix": "eslint src/**/*.{ts,js} --fix",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
     "build": "tsc -b",
     "watch": "tsc -w",
     "test": "echo \"Error: no test specified\" && exit 1"
