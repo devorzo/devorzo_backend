@@ -1,29 +1,29 @@
-# Lattice
+# Devorzo
 
 ------
 ### Install all Dependencies 
-> npm i -s  
+> yarn install
 
 ### Install devDependencies
-> npm i -D 
+> yarn install -D
 
 ------
 ### Building the Project
 Add prebuild script if required.
-> npm run build
+> yarn build
 
 ------
 ### Testing the Project
 Add pretest script if required.
-> npm run test
+> yarn test
 
 ------
 ### Starting the project
 Running in production
-> npm start
+> yarn start
 
 Running in development environment
-> npm start:dev
+> yarn dev
 
 -----
 # Versioning
