@@ -6,8 +6,8 @@
   "scripts": {
     "start": "node dist/app.js --env=production",
     "dev": "ts-node-dev src/app.ts --env=development",
-    "lint": "eslint src/**/*.{ts,js}",
-    "lint:fix": "eslint src/**/*.{ts,js} --fix",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
     "build": "tsc -b",
     "watch": "tsc -w",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -25,6 +25,7 @@
   "devDependencies": {
     "@commitlint/cli": "^9.1.2",
     "@commitlint/config-conventional": "^9.1.2",
+    "@types/jsonwebtoken": "^8.5.0",
     "@types/minimist": "^1.2.0",
     "@types/mongoose": "^5.7.36",
     "@types/uuid": "^8.3.0",
@@ -46,6 +47,7 @@
     "express": "^4.17.1",
     "graphql": "^15.3.0",
     "helmet": "^4.1.0",
+    "jsonwebtoken": "^8.5.1",
     "minimist": "^1.2.5",
     "mongodb": "^3.6.0",
     "mongoose": "^5.10.0",
