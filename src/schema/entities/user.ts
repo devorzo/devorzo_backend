@@ -224,7 +224,7 @@ export class User {
   tokens!: Token[]
 
   @Field(() => [Bookmarks], { defaultValue: [] })
-  @prop({ default: [] })
+  @prop({ type: () => Bookmarks, default: [] })
   bookmarks!: Bookmarks[]
 
   @Field(() => [History], { defaultValue: [] })

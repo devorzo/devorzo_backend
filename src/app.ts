@@ -15,6 +15,7 @@ import { TypegooseMiddleware } from './lib/typegooseMiddleware';
 import UserResolver from './schema/resolvers/userResolver';
 import ArticleResolver from './schema/resolvers/articleResolver';
 import CommunityResolver from './schema/resolvers/communityResolver';
+import { FollowResolver, FollowerResolver } from './schema/resolvers/followerResolver';
 import UserModel from './schema/entities/user';
 import parseToken from './lib/parseToken';
 
@@ -47,7 +48,13 @@ const corsOptionsDelegate = (req: any, callback: any) => {
 app.set('port', (process.env.PORT || 5000));
 
 const schema = buildSchema({
-  resolvers: [UserResolver, ArticleResolver, CommunityResolver],
+  resolvers: [
+    UserResolver,
+    FollowResolver,
+    FollowerResolver,
+    ArticleResolver,
+    CommunityResolver,
+  ],
   emitSchemaFile: path.resolve(__dirname, 'schema.gql'),
   // use document converting middleware
   globalMiddlewares: [TypegooseMiddleware],

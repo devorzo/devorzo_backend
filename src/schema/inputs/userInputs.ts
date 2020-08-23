@@ -3,7 +3,7 @@ import { InputType, Field } from 'type-graphql';
 import { User, Gender } from '../entities/user';
 
 @InputType()
-export class CreateNewUser implements Partial<User> {
+export class CreateNewUserInput implements Partial<User> {
   @Field()
   email!: string;
 
@@ -24,7 +24,7 @@ export class CreateNewUser implements Partial<User> {
 }
 
 @InputType()
-export class CheckUserIfUnique implements Partial<User> {
+export class CheckUserIfUniqueInput implements Partial<User> {
   @Field({ nullable: true })
   email!: string;
 
@@ -33,7 +33,7 @@ export class CheckUserIfUnique implements Partial<User> {
 }
 
 @InputType()
-export class FindUser implements Partial<User> {
+export class FindUserInput implements Partial<User> {
   @Field({ nullable: true })
   email!: string;
 
@@ -45,7 +45,19 @@ export class FindUser implements Partial<User> {
 }
 
 @InputType()
-export class LogUser implements Partial<User> {
+export class FollowUserInput implements Partial<User> {
+  @Field({ nullable: true })
+  email!: string;
+
+  @Field({ nullable: true })
+  username!: string;
+
+  @Field()
+  userId!: string;
+}
+
+@InputType()
+export class LogUserInput implements Partial<User> {
   @Field()
   email!: string;
 
@@ -69,7 +81,7 @@ export class SocialLinksInput {
 }
 
 @InputType()
-export class UpdateUser implements Partial<User> {
+export class UpdateUserInput implements Partial<User> {
   @Field({ nullable: true })
   email!: string;
 
