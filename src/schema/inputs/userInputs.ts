@@ -1,4 +1,3 @@
-import { } from '@typegoose/typegoose';
 import { InputType, Field } from 'type-graphql';
 import { User, Gender } from '../entities/user';
 

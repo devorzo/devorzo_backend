@@ -13,7 +13,7 @@ import logger, { Level } from './lib/logger';
 import initDatabase from './schema/database/mongoose';
 import { TypegooseMiddleware } from './lib/typegooseMiddleware';
 import UserResolver from './schema/resolvers/userResolver';
-import ArticleResolver from './schema/resolvers/articleResolver';
+import { ArticleResolver, BookmarkResolver, HistoryResolver } from './schema/resolvers/articleResolver';
 import CommunityResolver from './schema/resolvers/communityResolver';
 import { FollowResolver, FollowerResolver } from './schema/resolvers/followerResolver';
 import UserModel from './schema/entities/user';
@@ -53,6 +53,8 @@ const schema = buildSchema({
     FollowResolver,
     FollowerResolver,
     ArticleResolver,
+    BookmarkResolver,
+    HistoryResolver,
     CommunityResolver,
   ],
   emitSchemaFile: path.resolve(__dirname, 'schema.gql'),

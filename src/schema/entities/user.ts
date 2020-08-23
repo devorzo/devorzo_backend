@@ -53,7 +53,7 @@ class Token {
 }
 
 @ObjectType()
-class Bookmarks {
+export class Bookmarks {
   @Field()
   @prop({ required: true })
   articleId!: string
@@ -64,7 +64,7 @@ class Bookmarks {
 }
 
 @ObjectType()
-class SocialLinks {
+export class SocialLinks {
   @Field({ nullable: true })
   @prop()
   github!: string;
@@ -83,7 +83,7 @@ class SocialLinks {
 }
 
 @ObjectType()
-class History {
+export class History {
   @Field()
   @prop({ required: true })
   articleId!: string

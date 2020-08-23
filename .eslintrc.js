@@ -31,6 +31,7 @@ module.exports = {
     'no-useless-escape': 0,
     'no-use-before-define': 0,
     '@typescript-eslint/no-non-null-assertion': 'off',
+    'import/prefer-default-export': 0,
     'import/extensions': [
       'error',
       'ignorePackages',

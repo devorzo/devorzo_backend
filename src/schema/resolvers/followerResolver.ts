@@ -1,5 +1,5 @@
 import {
-  Resolver, Mutation, Query, Ctx, Arg, Root, FieldResolver, Float,
+  Resolver, Mutation, Query, Ctx, Arg, Root, FieldResolver,
 } from 'type-graphql';
 // import logger from '../../lib/logger';
 import _ from 'lodash';

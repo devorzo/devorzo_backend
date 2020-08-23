@@ -7,6 +7,7 @@ type Article {
   articleBanner: String!
   articleId: String!
   articleType: Float!
+  author: User
   authorId: String!
   belongsToCommunity: Float!
   comments: [Comments!]!
@@ -15,6 +16,7 @@ type Article {
   createdOn: Float!
   durationOfArticle: Float!
   edited: Float!
+  isArticleLiked: Boolean
   lastEditedOn: Float
   likes: [Likes!]!
   moderationStatus: Float!
@@ -24,7 +26,13 @@ type Article {
   views: Float!
 }
 
+input ArticleInput {
+  articleType: String
+  authorId: String
+}
+
 type Bookmarks {
+  article: Article!
   articleId: String!
   bookmarkedOn: Float!
 }
@@ -61,6 +69,10 @@ input CreateNewUserInput {
   username: String!
 }
 
+input FindArticleInput {
+  articleId: String!
+}
+
 input FindUserInput {
   email: String
   userId: String
@@ -86,6 +98,7 @@ input FollowUserInput {
 }
 
 type History {
+  article: Article!
   articleId: String!
   visitedOn: Float!
 }
@@ -103,20 +116,26 @@ input LogUserInput {
 type Mutation {
   addTestArticle: Article!
   addTestCommunity: Community!
+  addToBookmarks(where: FindArticleInput!): Boolean
+  addToHistory(where: FindArticleInput!): Boolean
+  clearAllBookmarks: Boolean
+  clearAllHistory: Boolean
   createNewUser(data: CreateNewUserInput!): User
   deleteUser(where: FindUserInput!): Boolean
   followUser(where: FollowUserInput!): Boolean
   loginExistingUser(where: LogUserInput!): User
+  removeArticleFromBookmarks(where: FindArticleInput!): Boolean
+  removeArticleFromHistory(where: FindArticleInput!): Boolean
   unfollowUser(where: FollowUserInput!): Boolean
   updateUser(data: UpdateUserInput!, where: FindUserInput!): User
 }
 
 type Query {
-  articles: [Article!]!
+  article(where: FindArticleInput!): Article
+  articles(limit: Float, skip: Float, where: ArticleInput): [Article!]
   communities: [Community!]!
   followers(where: FollowUserInput!): Follow
   following(where: FollowUserInput!): [Follow!]!
-  helloFromArticle: String!
   helloFromCommunity: String!
   isUserUnique(where: CheckUserIfUniqueInput!): Boolean!
   user(where: FindUserInput!): User
