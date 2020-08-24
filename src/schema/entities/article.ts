@@ -23,7 +23,7 @@ export const randNum = (min: number, max: number): number => {
 };
 
 @ObjectType()
-class Likes {
+export class Likes {
   @Field()
   @prop({
     trim: true,
@@ -40,7 +40,7 @@ class Likes {
 }
 
 @ObjectType()
-class Comments {
+export class Comments {
   @Field()
   @prop({
     default: `cmt.${uuid()}`,
@@ -72,7 +72,7 @@ class Comments {
 }
 
 @ObjectType()
-class Tags {
+export class Tags {
   @Field()
   @prop({
     required: true,
@@ -150,9 +150,9 @@ export class Article {
   })
   authorId!: string;
 
-  @Field()
+  @Field({ nullable: true })
   @prop({
-    default: '',
+    // default: '',
     trim: true,
   })
   articleBanner!: string;
@@ -164,38 +164,39 @@ export class Article {
   })
   views!: number;
 
-  @Field()
+  @Field({ nullable: true })
   @prop({
     enum: ArticleType,
-    default: ArticleType.NORMAL,
+    // default: ArticleType.NORMAL,
     type: Number,
   })
   articleType!: ArticleType;
 
-  @Field()
+  @Field({ nullable: true })
   @prop({
-    default: '',
+    // default: '',
     trim: true,
   })
   communityId!: string;
 
-  @Field()
+  @Field({ nullable: true })
   @prop({
-    default: BooleanFlag.NO,
+    // default: BooleanFlag.NO,
   })
   belongsToCommunity!: number;
 
-  @Field()
+  @Field({ nullable: true })
   @prop({
-    default: BooleanFlag.NO,
+    // default: BooleanFlag.NO,
   })
   moderationStatus!: number;
 
-  @Field()
-  @prop({
-    default: 0,
-  })
-  durationOfArticle!: number;
+  /* Auto calc duration of article on client side */
+  // @Field()
+  // @prop({
+  //   default: 0,
+  // })
+  // durationOfArticle!: number;
 
   @Field(() => [Likes])
   @prop({ type: () => Likes, default: [] })

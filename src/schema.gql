@@ -4,22 +4,22 @@
 # -----------------------------------------------
 
 type Article {
-  articleBanner: String!
+  articleBanner: String
   articleId: String!
-  articleType: Float!
+  articleType: Float
   author: User
   authorId: String!
-  belongsToCommunity: Float!
+  belongsToCommunity: Float
   comments: [Comments!]!
-  communityId: String!
+  communityId: String
   content: String!
   createdOn: Float!
-  durationOfArticle: Float!
   edited: Float!
+  isArticleBookmarked: Boolean
   isArticleLiked: Boolean
   lastEditedOn: Float
   likes: [Likes!]!
-  moderationStatus: Float!
+  moderationStatus: Float
   preview: String!
   tags: [Tags!]!
   title: String!
@@ -42,10 +42,15 @@ input CheckUserIfUniqueInput {
   username: String
 }
 
+input CommentDataInputType {
+  comment: String!
+}
+
 type Comments {
   comment: String!
   commentedOn: Float!
   commentId: String!
+  user: User
   userId: String!
 }
 
@@ -71,6 +76,11 @@ input CreateNewUserInput {
 
 input FindArticleInput {
   articleId: String!
+}
+
+input FindCommentInputType {
+  articleId: String!
+  commentId: String!
 }
 
 input FindUserInput {
@@ -114,20 +124,38 @@ input LogUserInput {
 }
 
 type Mutation {
-  addTestArticle: Article!
+  addComment(data: CommentDataInputType!, where: FindArticleInput!): Boolean
   addTestCommunity: Community!
   addToBookmarks(where: FindArticleInput!): Boolean
   addToHistory(where: FindArticleInput!): Boolean
+  addViews(where: FindArticleInput!): Boolean
   clearAllBookmarks: Boolean
   clearAllHistory: Boolean
+  createNewArticle(data: NewArticleInput!): Article!
   createNewUser(data: CreateNewUserInput!): User
+  deleteArticle(where: FindArticleInput!): Article!
   deleteUser(where: FindUserInput!): Boolean
+  editComment(data: CommentDataInputType!, where: FindCommentInputType!): Boolean
   followUser(where: FollowUserInput!): Boolean
+  likeArticle(where: FindArticleInput!): Boolean
   loginExistingUser(where: LogUserInput!): User
   removeArticleFromBookmarks(where: FindArticleInput!): Boolean
   removeArticleFromHistory(where: FindArticleInput!): Boolean
+  removeComment(where: FindCommentInputType!): Boolean
   unfollowUser(where: FollowUserInput!): Boolean
+  unlikeArticle(where: FindArticleInput!): Boolean
+  updateArticle(data: NewArticleInput!, where: FindArticleInput!): Article!
   updateUser(data: UpdateUserInput!, where: FindUserInput!): User
+}
+
+input NewArticleInput {
+  articleBanner: String
+  belongsToCommunity: Float
+  communityId: String
+  content: String!
+  preview: String!
+  tagsStrings: [String!]
+  title: String!
 }
 
 type Query {

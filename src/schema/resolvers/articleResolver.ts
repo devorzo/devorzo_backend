@@ -2,8 +2,11 @@ import {
   Resolver, Mutation, Query, Arg, Ctx, FieldResolver, Root,
 } from 'type-graphql';
 import _ from 'lodash';
-// import logger from '../../lib/logger';
-import { Article, ArticleModel, ArticleType } from '../entities/article';
+
+import { v4 } from 'uuid';
+import {
+  Article, ArticleModel, ArticleType, Comments, Tags,
+} from '../entities/article';
 import {
   User, UserModel, History, Bookmarks,
 } from '../entities/user';
@@ -12,8 +15,96 @@ import {
   ArticleInputType,
   ArticleInput,
   FindArticleInput,
+  NewArticleInput,
+  CommentDataInputType,
+  FindCommentInputType,
 } from '../inputs/articleInputs';
 import { Context } from '../contexts/contextType';
+
+@Resolver(() => Comments)
+export class CommentResolver {
+  @FieldResolver(() => User, { nullable: true })
+  async user(@Root() r: Comments): Promise<Partial<User> | null> {
+    const u = (await UserModel.findOne({
+      userId: r.userId,
+    }))?.toJSON();
+
+    return u;
+  }
+
+  @Mutation(() => Boolean, { nullable: true })
+  async addComment(
+    @Arg('where') articleData: FindArticleInput,
+    @Arg('data') commentData: CommentDataInputType,
+    @Ctx() context: Context,
+  ): Promise<boolean | null> {
+    if (context.user == null) { return null; }
+
+    const c = await ArticleModel.findOneAndUpdate({
+      articleId: articleData.articleId,
+    }, {
+      $push: {
+        comments: {
+          userId: context.user.userId,
+          comment: commentData.comment,
+          commentId: `cmt.${v4()}`,
+          commentedOn: Date.now(),
+        },
+      },
+    });
+
+    if (c) return true;
+
+    return null;
+  }
+
+  @Mutation(() => Boolean, { nullable: true })
+  async removeComment(
+    @Arg('where') articleData: FindCommentInputType,
+    @Ctx() context: Context,
+  ): Promise<boolean | null> {
+    if (context.user == null) { return null; }
+
+    const c = await ArticleModel.findOneAndUpdate({
+      articleId: articleData.articleId,
+      'comments.commentId': articleData.commentId,
+      'comments.userId': context.user.userId,
+    }, {
+      $pull: {
+        comments: {
+          commentId: articleData.commentId,
+        },
+      },
+    });
+
+    if (c) return true;
+
+    return null;
+  }
+
+  @Mutation(() => Boolean, { nullable: true })
+  async editComment(
+    @Arg('where') articleData: FindCommentInputType,
+    @Arg('data') commentData: CommentDataInputType,
+    @Ctx() context: Context,
+  ): Promise<boolean | null> {
+    if (context.user == null) { return null; }
+
+    const c = await ArticleModel.findOneAndUpdate({
+      articleId: articleData.articleId,
+      'comments.commentId': articleData.commentId,
+      'comments.userId': context.user.userId,
+    }, {
+      $set: {
+        'comments.$.comment': commentData.comment,
+      },
+    });
+
+    if (c) return true;
+
+    return null;
+  }
+}
 
 @Resolver(() => History)
 export class HistoryResolver {
@@ -193,25 +284,6 @@ export class BookmarkResolver {
 
 @Resolver(() => Article)
 export class ArticleResolver {
-  /*
-  article
-  articles
-   - featured
-   - latest
-   - popular
-   - user
-   - history
-   - bookmark
-
-  createNewArticle
-  deleteArticle
-  updateArticle
-
-  like
-  view
-  comment
-  */
-
   @FieldResolver(() => User, { nullable: true })
   async author(@Root() r: Article): Promise<Partial<User> | null> {
     const u = (await UserModel.findOne({
@@ -233,6 +305,20 @@ export class ArticleResolver {
     });
 
     return isLiked;
+  }
+
+  @FieldResolver(() => Boolean, { nullable: true })
+  async isArticleBookmarked(@Root() r: Article, @Ctx() context: Context): Promise<boolean | null> {
+    if (context.user == null) { return null; }
+
+    let isBookmarked = false;
+    context?.user?.bookmarks.forEach((b) => {
+      if (b.articleId == r.articleId) {
+        isBookmarked = true;
+      }
+    });
+
+    return isBookmarked;
   }
 
   @Query(() => Article, { nullable: true })
@@ -258,13 +344,6 @@ export class ArticleResolver {
     if (!skip) s = 0;
     if (!limit) l = 0;
 
-    // if (
-    //   !articleData
-    //   || !articleData?.articleType
-    //   || articleData?.articleType == ArticleInputType.FEATURED
-    //   || articleData?.articleType == ArticleInputType.LATEST
-    //   || articleData?.articleType == ArticleInputType.POPULAR
-    // ) {
     const u = await ArticleModel.find({
       ..._.pickBy({
         authorId: (articleData?.authorId) ? articleData.authorId : null,
@@ -282,20 +361,175 @@ export class ArticleResolver {
     }).skip(s).limit(l);
 
     return u;
-    // }
+  }
+
+  @Mutation(() => Article)
+  async createNewArticle(
+    @Arg('data') articleData: NewArticleInput,
+    @Ctx() context: Context,
+  ): Promise<Article | null> {
+    if (context.user == null) { return null; }
+
+    // eslint-disable-next-line prefer-const
+    let t: Tags[] = [];
+
+    if (articleData.tagsStrings?.length > 0) {
+      articleData.tagsStrings?.forEach((tag) => {
+        t.push({
+          tag,
+          addedOn: Date.now(),
+        });
+      });
+    }
+
+    const a = await new ArticleModel({
+      ..._.pickBy({
+        title: articleData.title,
+        context: articleData.content,
+        preview: articleData.preview,
+        articleBanner: articleData.articleBanner,
+        belongsToCommunity: articleData.belongsToCommunity,
+        communityId: articleData.communityId,
+        authorId: context.user.userId,
+        tags: t,
+      },
+      v => (v != null && v != undefined)),
+    }).save();
+
+    return a;
+  }
+
+  @Mutation(() => Article)
+  async updateArticle(
+    @Arg('where') articleData: FindArticleInput,
+    @Arg('data') updatedArticleData: NewArticleInput,
+    @Ctx() context: Context,
+  ): Promise<Article | null> {
+    if (context.user == null) { return null; }
+
+    // eslint-disable-next-line prefer-const
+    let t: Tags[] = [];
+
+    if (updatedArticleData.tagsStrings?.length > 0) {
+      updatedArticleData.tagsStrings?.forEach((tag) => {
+        t.push({
+          tag,
+          addedOn: Date.now(),
+        });
+      });
+    }
+
+    const a = await ArticleModel.findOneAndUpdate({
+      articleId: articleData.articleId,
+      authorId: context.user.userId,
+    }, {
+      title: updatedArticleData.title,
+      context: updatedArticleData.content,
+      preview: updatedArticleData.preview,
+      articleBanner: updatedArticleData.articleBanner,
+      belongsToCommunity: updatedArticleData.belongsToCommunity,
+      communityId: updatedArticleData.communityId,
+      authorId: context.user.userId,
+      tags: t,
+    });
+
+    if (a) { return a; }
 
     return null;
   }
 
   @Mutation(() => Article)
-  async addTestArticle(): Promise<Article> {
-    const a = new ArticleModel({
-      title: 'Test article',
-      content: 'Test content',
-      preview: 'Test preview',
-      authorId: 'testuser123',
+  async deleteArticle(
+    @Arg('where') articleData: FindArticleInput,
+    @Ctx() context: Context,
+  ): Promise<boolean | null> {
+    if (context.user == null) { return null; }
+
+    const a = await ArticleModel.findOneAndDelete({
+      articleId: articleData.articleId,
+      authorId: context.user.userId,
     });
-    const saved = await a.save();
-    return saved;
+
+    if (a) return true;
+
+    return null;
+  }
+
+  @Mutation(() => Boolean, { nullable: true })
+  async likeArticle(
+    @Arg('where') articleData: FindArticleInput,
+    @Ctx() context: Context,
+  ): Promise<boolean | null> {
+    if (context.user == null) { return null; }
+
+    const liked = await ArticleModel.exists({
+      articleId: articleData.articleId,
+      'likes.userId': context.user.userId,
+    });
+
+    if (!liked) {
+      const l = await ArticleModel.findOneAndUpdate({
+        articleId: articleData.articleId,
+      }, {
+        $push: {
+          likes: {
+            userId: context.user.userId,
+            likedOn: Date.now(),
+          },
+        },
+      });
+
+      if (l) return true;
+    }
+
+    return null;
+  }
+
+  @Mutation(() => Boolean, { nullable: true })
+  async unlikeArticle(
+    @Arg('where') articleData: FindArticleInput,
+    @Ctx() context: Context,
+  ): Promise<boolean | null> {
+    if (context.user == null) { return null; }
+
+    const liked = await ArticleModel.exists({
+      articleId: articleData.articleId,
+      'likes.userId': context.user.userId,
+    });
+
+    if (liked) {
+      const l = await ArticleModel.findOneAndUpdate({
+        articleId: articleData.articleId,
+      }, {
+        $pull: {
+          likes: {
+            userId: context.user.userId,
+          },
+        },
+      });
+
+      if (l) return true;
+    }
+
+    return null;
+  }
+
+  @Mutation(() => Boolean, { nullable: true })
+  async addViews(
+    @Arg('where') articleData: FindArticleInput,
+    @Ctx() context: Context,
+  ):Promise<boolean | null> {
+    if (context.user == null) return null;
+    const u = await ArticleModel.findOneAndUpdate({
+      articleId: articleData.articleId,
+    }, {
+      $inc: {
+        views: 1,
+      },
+    });
+
+    if (u) return true;
+
+    return null;
   }
 }
