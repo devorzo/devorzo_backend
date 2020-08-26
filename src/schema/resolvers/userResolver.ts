@@ -4,6 +4,7 @@ import {
 // import logger from '../../lib/logger';
 import _ from 'lodash';
 import { v4 } from 'uuid';
+import bcrypt from 'bcryptjs';
 import {
   User, UserModel, Access, AccountType,
 } from '../entities/user';
@@ -49,7 +50,7 @@ export class UserResolver {
   }
 
   @Mutation(() => User, { nullable: true })
-  async createNewUser(@Arg('data') newUserData: CreateNewUserInput): Promise<Partial<User | null>> {
+  async createNewUser(@Arg('data') newUserData: CreateNewUserInput): Promise<Partial<User> | null> {
     const size = await UserModel.find({}).limit(1).countDocuments();
 
     const savedUser = await new UserModel({
@@ -71,17 +72,22 @@ export class UserResolver {
   }
 
   @Mutation(() => User, { nullable: true })
-  async loginExistingUser(@Arg('where') userData: LogUserInput): Promise<Partial<User | null>> {
-    const user = await UserModel.findByCredentials(userData.email, userData.password);
+  async loginExistingUser(@Arg('where') userData: LogUserInput): Promise<Partial<User> | null> {
+    const user = await UserModel.findOne({
+      email: userData.email,
+    });
+
     if (user) {
-      const u = await UserModel.findOne({
-        email: userData.email,
-      });
-      const token = await u?.generateToken(Access.AUTH);
-      return {
-        ...user,
-        authToken: token,
-      };
+      const passwordMatch = bcrypt.compareSync(userData.password, user.password);
+
+      if (passwordMatch) {
+        const token = await user?.generateToken(Access.AUTH);
+
+        return {
+          ...user,
+          authToken: token,
+        };
+      }
     }
 
     return null;

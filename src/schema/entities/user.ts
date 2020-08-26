@@ -1,8 +1,7 @@
 /* eslint-disable func-names */
 import {
-  prop, getModelForClass, DocumentType, pre, ReturnModelType,
+  prop, getModelForClass, DocumentType, pre,
 } from '@typegoose/typegoose';
-// import { ObjectId } from 'mongodb';
 import { Field, ObjectType, Int } from 'type-graphql';
 import validator from 'validator';
 import { v4 as uuid } from 'uuid';
@@ -233,26 +232,6 @@ export class User {
 
   @Field({ nullable: true })
   authToken?: string;
-
-  /* statics */
-
-  public static async findByCredentials(
-    this: ReturnModelType<typeof User>,
-    email: string,
-    password: string,
-  ): Promise<User | null> {
-    return this.findOne({
-      email,
-    }).then((user: DocumentType<User> | null) => {
-      if (!user) {
-        return Promise.resolve(null);
-      }
-
-      const compare = bcrypt.compareSync(password, user.password);
-      if (compare) { return user; }
-      return null;
-    });
-  }
 
   /* methods */
 
